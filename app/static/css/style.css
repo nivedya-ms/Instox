@@ -1,5 +1,85 @@
+/* Global Styles */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f9f9f9;
+    overflow-x: hidden;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Hero Section */
+.hero {
+    height: 100vh;
+    background: linear-gradient(45deg, #6a11cb, #2575fc);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
     text-align: center;
-    margin-top: 50px;
+    padding: 0 20px;
+}
+
+/* Features Section */
+.features {
+    padding: 80px 0;
+}
+
+.feature-card {
+    border-radius: 10px;
+    background-color: white;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+}
+
+/* About Section */
+.about {
+    background-color: #f7f7f7;
+}
+
+/* Contact Form */
+.contact .form-control {
+    border-radius: 5px;
+    margin-bottom: 15px;
+    padding: 12px;
+}
+
+/* Footer */
+footer {
+    background-color: #333;
+    color: white;
+    padding: 30px 0;
+}
+
+footer p {
+    margin: 0;
+}
+
+/* Animations */
+.wow {
+    visibility: hidden;
+}
+
+.wow.fadeInUp {
+    animation: fadeInUp 1s ease-in-out forwards;
+}
+
+.wow.fadeIn {
+    animation: fadeIn 1s ease-in-out forwards;
+}
+
+@keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(50px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
 }
