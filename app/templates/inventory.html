@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section id="inventory">
+    <h2>Inventory Management</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Stock</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in inventory %}
+            <tr>
+                <td>{{ item.item }}</td>
+                <td>{{ item.stock }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}
