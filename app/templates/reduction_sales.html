@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="fw-bold text-dark mb-4">Reduction Sales Recommendations</h2>
+    <p class="text-muted mb-4">
+        Instox identifies products nearing expiry or with slow sales, and recommends optimal reduction prices to ensure you clear old stock while maximizing profits.
+    </p>
+
+    <!-- List of products with recommended prices -->
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="bg-warning text-white">
+                <tr>
+                    <th>Product Name</th>
+                    <th>Current Price</th>
+                    <th>Recommended Reduction Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in reduction_items %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>${{ item.price }}</td>
+                    <td>${{ item.reduction_price }}</td>
+                    <td>
+                        <a href="{{ url_for('main.apply_reduction', id=item.id) }}" class="btn btn-success btn-sm">Apply Reduction</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

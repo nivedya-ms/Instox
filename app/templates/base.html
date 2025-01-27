@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Dynamic Professional Website{% endblock %}</title>
+    <title>{% block title %}Instox - Inventory Management System{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <!-- Include external CSS (style.css) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
         /* Inline for simplicity, otherwise use external CSS */
         body {
@@ -20,7 +23,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background-color: #333;">
         <div class="container">
-            <a class="navbar-brand" href="#">My Dynamic App</a>
+            <a class="navbar-brand" href="#">Instox</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -35,14 +38,62 @@
         </div>
     </nav>
 
-    {% block content %}{% endblock %}
+    <!-- Content Block -->
+    {% block content %}
+    <div class="container">
+        <h1>Welcome to Instox - Your Inventory Management System</h1>
+        <p>Instox is a comprehensive inventory management system designed to help businesses efficiently manage their stock, verify deliveries, and analyze profits. With advanced features like demand forecasting and reduction sales, Instox is tailored to meet the needs of small businesses looking to optimize their inventory operations.</p>
 
+        <!-- Features Section -->
+        <div class="feature-card-container">
+            <a href="{{ url_for('main.inventory') }}" class="feature-card p-4 shadow-lg wow slideInUp" data-wow-delay="0.4s">
+                <h3>View Inventory</h3>
+                <p>Track current stock levels, manage inventory items, and ensure timely restocking.</p>
+            </a>
+        </div>
+
+        <div class="feature-card-container">
+            <a href="{{ url_for('main.delivery') }}" class="feature-card p-4 shadow-lg wow slideInUp" data-wow-delay="0.4s">
+                <h3>Verify Deliveries</h3>
+                <p>Verify the status of deliveries quickly by entering delivery IDs and ensure smooth order processing.</p>
+            </a>
+        </div>
+
+        <div class="feature-card-container">
+            <a href="{{ url_for('main.profit_analysis') }}" class="feature-card p-4 shadow-lg wow slideInUp" data-wow-delay="0.4s">
+                <h3>Profit Analysis</h3>
+                <p>Gain insights into your sales and profit data to make informed decisions for business growth.</p>
+            </a>
+        </div>
+
+        <div class="feature-card-container">
+            <a href="{{ url_for('main.forecasting') }}" class="feature-card p-4 shadow-lg wow slideInUp" data-wow-delay="0.4s">
+                <h3>Demand Forecasting</h3>
+                <p>Leverage advanced machine learning algorithms to predict demand and optimize stock management.</p>
+            </a>
+        </div>
+
+        <div class="feature-card-container">
+            <a href="{{ url_for('main.reduction_sales') }}" class="feature-card p-4 shadow-lg wow slideInUp" data-wow-delay="0.4s">
+                <h3>Reduction Sales</h3>
+                <p>Execute reduction sales without sacrificing profit margins, ensuring efficient product turnover.</p>
+            </a>
+        </div>
+    </div>
+    {% endblock %}
+
+    <!-- Footer -->
     <footer class="bg-dark text-white py-4 text-center">
-        <p>&copy; 2025 My Dynamic App. All rights reserved.</p>
+        <p>&copy; 2025 Instox. All rights reserved.</p>
     </footer>
 
+    <!-- Include Bootstrap JS and jQuery -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- Include external JavaScript (script.js) -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script> <!-- Animation library -->
     <script>
         new WOW().init();

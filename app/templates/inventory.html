@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="fw-bold text-dark mb-4">Inventory Management</h2>
+    <p class="text-muted mb-4">
+        Effortlessly manage your stock levels. Track products, adjust quantities, and ensure you're always ready for your customers’ needs.
+    </p>
+
+    <!-- Inventory Table -->
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="bg-primary text-white">
+                <tr>
+                    <th>Product Name</th>
+                    <th>Stock Level</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in inventory_items %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.stock_level }}</td>
+                    <td>${{ item.price }}</td>
+                    <td>
+                        <a href="{{ url_for('main.edit_inventory', id=item.id) }}" class="btn btn-warning btn-sm">Edit</a>
+                        <a href="{{ url_for('main.delete_inventory', id=item.id) }}" class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

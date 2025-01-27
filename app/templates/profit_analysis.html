@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section id="profit-analysis">
+    <h2>Profit Analysis</h2>
+    <canvas id="profit-chart"></canvas>
+</section>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const profitData = {{ data|tojson }};
+    const ctx = document.getElementById('profit-chart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: profitData.months,
+            datasets: [
+                {
+                    label: 'Sales',
+                    data: profitData.sales,
+                    borderColor: 'blue',
+                    fill: false,
+                },
+                {
+                    label: 'Profit',
+                    data: profitData.profits,
+                    borderColor: 'green',
+                    fill: false,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Months',
+                    },
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Amount',
+                    },
+                },
+            },
+        },
+    });
+</script>
+{% endblock %}

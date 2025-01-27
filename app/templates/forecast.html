@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="fw-bold text-dark mb-4">Demand Forecasting</h2>
+    <p class="text-muted mb-4">
+        Predict future demand using data-driven insights. Optimize your inventory, ensuring you have the right stock at the right time.
+    </p>
+
+    <!-- Forecast Form -->
+    <form method="POST" action="{{ url_for('main.forecast') }}">
+        <div class="mb-3">
+            <label for="product" class="form-label">Select Product</label>
+            <select class="form-select" id="product" name="product">
+                <option selected>Choose a product...</option>
+                {% for product in products %}
+                <option value="{{ product.id }}">{{ product.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Get Forecast</button>
+    </form>
+
+    <!-- Forecast Results -->
+    {% if forecast_demand %}
+    <div class="mt-4">
+        <h4>Forecast for selected product:</h4>
+        <p><strong>Expected Demand for next month:</strong> {{ forecast_demand }} units.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

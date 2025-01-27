@@ -1,0 +1,20 @@
+document.getElementById("delivery-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const deliveryId = document.getElementById("delivery-id").value;
+
+    fetch("/delivery", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ delivery_id: deliveryId }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            const statusDiv = document.getElementById("delivery-status");
+            statusDiv.innerHTML = `Delivery ID: ${data.id} - Status: ${data.status}`;
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+        });
+});

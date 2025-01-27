@@ -4,9 +4,6 @@ from flask import session
 
 main = Blueprint("main", __name__)
 
-# Set the secret key for session management
-main.secret_key = 'your_secret_key_here'
-
 # Database connection setup
 db = sqlite3.connect('instox.db', check_same_thread=False)
 cursor = db.cursor()
@@ -18,8 +15,8 @@ try:
 except Exception as e:
     print(f"Database connection failed: {e}")
 
-verification_codes = {}
 
+verification_codes = {}
 @main.route("/")
 def home():
     return render_template("home.html")
@@ -80,7 +77,7 @@ def turnover():
     # Placeholder for turnover calculation logic
     return render_template("turnover.html")
 
-@main.route("/growth_analytics")
+@main.route("/growth-analytics")
 def growth_analytics():
     # Placeholder for business growth analytics logic
     return render_template("growth_analytics.html")
@@ -123,6 +120,7 @@ def register_owner():
         return jsonify({"message": "Registration successful."}), 201
 
     return render_template("owner_register.html")
+
 def send_email_otp(email, otp):
     # Dummy email function (configure properly in production)
     print(f"Sending email to {email} with OTP: {otp}")
@@ -144,3 +142,6 @@ def verify_phone():
         if value["phone_otp"] == otp:
             return jsonify({"message": "Phone verified successfully!"}), 200
     return jsonify({"error": "Invalid OTP"}), 400
+
+
+

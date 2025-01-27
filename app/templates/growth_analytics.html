@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="fw-bold text-dark mb-4">Business Growth Analytics</h2>
+    <p class="text-muted mb-4">
+        Track your business performance over time, with detailed analytics on sales, profits, and growth metrics. Visualize your business trajectory and identify areas for improvement.
+    </p>
+
+    <!-- Business Growth Graphs (Placeholder) -->
+    <div class="row">
+        <div class="col-md-6">
+            <h4>Sales Growth Over Time</h4>
+            <canvas id="salesGrowthChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <h4>Profit Growth Over Time</h4>
+            <canvas id="profitGrowthChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Example chart data for sales and profit growth
+    var ctxSales = document.getElementById('salesGrowthChart').getContext('2d');
+    var salesChart = new Chart(ctxSales, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+            datasets: [{
+                label: 'Sales Growth',
+                data: [1200, 1800, 2500, 3200, 4200],
+                borderColor: 'rgba(75, 192, 192, 1)',
+                fill: false
+            }]
+        }
+    });
+
+    var ctxProfit = document.getElementById('profitGrowthChart').getContext('2d');
+    var profitChart = new Chart(ctxProfit, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+            datasets: [{
+                label: 'Profit Growth',
+                data: [200, 500, 800, 1100, 1500],
+                borderColor: 'rgba(153, 102, 255, 1)',
+                fill: false
+            }]
+        }
+    });
+</script>
+
+{% endblock %}

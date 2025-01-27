@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="fw-bold text-dark mb-4">Turnover Calculation</h2>
+    <p class="text-muted mb-4">
+        Calculate your total turnover based on product sales and profit margins. Get insights into your business performance and identify growth opportunities.
+    </p>
+
+    <!-- Turnover Calculation Form -->
+    <form method="POST" action="{{ url_for('main.turnover') }}">
+        <div class="mb-3">
+            <label for="month" class="form-label">Select Month</label>
+            <input type="month" class="form-control" id="month" name="month" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Calculate Turnover</button>
+    </form>
+
+    <!-- Turnover Results -->
+    {% if turnover %}
+    <div class="mt-4">
+        <h4>Your Total Turnover for the selected month:</h4>
+        <p><strong>Total Sales:</strong> ${{ turnover.sales }}</p>
+        <p><strong>Profit:</strong> ${{ turnover.profit }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

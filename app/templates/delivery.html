@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section id="delivery">
+    <h2>Delivery Verification</h2>
+    <form id="delivery-form">
+        <label for="delivery-id">Enter Delivery ID:</label>
+        <input type="text" id="delivery-id" name="delivery_id" required>
+        <button type="submit">Verify</button>
+    </form>
+    <div id="delivery-status"></div>
+</section>
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+{% endblock %}

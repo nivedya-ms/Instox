@@ -1,18 +1,13 @@
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
+# app/__init__.py
 
-db = SQLAlchemy()
-migrate = Migrate()
+from flask import Flask
+from .views import main  # Make sure the Blueprint is imported from views
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object('config.Config')
 
-    db.init_app(app)
-    migrate.init_app(app, db)
-
-    from app.views import main
-    app.register_blueprint(main)
+    # Register the Blueprint
+    app.register_blueprint(main, url_prefix='/')
 
     return app
+
