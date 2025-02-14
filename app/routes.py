@@ -93,7 +93,7 @@ def owner_login():
         user = cursor.fetchone()
 
         if user:
-            session['user_id'] = user[0]
+            # session['user_id'] = user[0]
             return jsonify({"message": "Login successful."}), 200
         else:
             return jsonify({"message": "Invalid email or password."}), 401
