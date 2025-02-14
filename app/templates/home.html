@@ -1,184 +1,67 @@
 {% extends "base.html" %}
 
+{% block title %}Home - Instox{% endblock %}
+
 {% block content %}
 <!-- Hero Section -->
-<div class="container-fluid hero-section text-white py-5" style="background: linear-gradient(135deg, #6a11cb, #2575fc); position: relative; overflow: hidden;">
-    <div class="container text-center position-relative z-1">
-        <h1 class="display-4 fw-bold mb-4 animate__animated animate__fadeInDown">Welcome to Instox</h1>
-        <p class="lead mb-4 animate__animated animate__fadeInUp">
-            Revolutionizing inventory management for your growing business.
-        </p>
-
-        <a href="{{ url_for('main.owner_login') }}" class="btn btn-light btn-lg px-5 py-3 animate__animated animate__fadeInUp">
-            Sign in
-        </a>
-        <p>for
-        <a href="{{ url_for('main.register_owner') }}">
-            Register
-        </a> click here!!</p>
+<section id="home" class="hero d-flex justify-content-center align-items-center text-white text-center" style="background: linear-gradient(45deg, #6a11cb, #2575fc);">
+    <div class="container">
+        <h1 class="display-4 wow fadeInUp" data-wow-delay="0.2s">Welcome to Instox</h1>
+        <p class="lead wow fadeInUp" data-wow-delay="0.4s">Simplifying Retail Management with AI-Powered Solutions.</p>
+        <a href="#features" class="btn btn-light btn-lg mt-3 wow fadeInUp" data-wow-delay="0.6s">Explore Features</a>
     </div>
-    <!-- Animated Background -->
-    <div class="hero-shapes">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-        <div class="shape shape-3"></div>
-    </div>
-</div>
-
-<!-- About Section -->
-<div class="container my-5">
-    <div class="row align-items-center">
-        <div class="col-md-6">
-            <h2 class="fw-bold text-dark mb-4 animate__animated animate__fadeInLeft">Why Choose Instox?</h2>
-            <p class="text-muted mb-4 animate__animated animate__fadeInLeft">
-                Our platform provides everything you need to manage your inventory,
-                analyze profits, and enhance sales, all in one place.
-                With powerful tools and easy-to-use features, Instox is the smart choice for your business.
-            </p>
-            <ul class="list-unstyled text-primary animate__animated animate__fadeInLeft">
-                <li class="mb-3"><i class="fas fa-check-circle me-2"></i> Streamlined inventory management</li>
-                <li class="mb-3"><i class="fas fa-check-circle me-2"></i> Demand forecasting & product recommendations</li>
-                <li class="mb-3"><i class="fas fa-check-circle me-2"></i> Reduction sales recommendations</li>
-                <li class="mb-3"><i class="fas fa-check-circle me-2"></i> Detailed profit analytics</li>
-                <li class="mb-3"><i class="fas fa-check-circle me-2"></i> Business growth tracking</li>
-            </ul>
-        </div>
-    </div>
-</div>
+</section>
 
 <!-- Features Section -->
-<div class="container-fluid bg-light py-5">
+<section id="features" class="features py-5">
     <div class="container text-center">
-        <h2 class="fw-bold text-dark mb-5 animate__animated animate__fadeInDown">Explore Our Features</h2>
-        <div class="row g-4">
-            <!-- Feature 1: Stock Management -->
-            <div class="col-md-4 animate__animated animate__fadeInUp">
-                <div class="card border-0 shadow-sm h-100 feature-card">
-                    <div class="card-body text-center p-4">
-                        <div class="icon-circle bg-primary text-white mx-auto mb-4">
-                            <i class="fas fa-boxes fa-3x"></i>
-                        </div>
-                        <h5 class="card-title fw-bold mb-3">Stock Management</h5>
-                        <p class="card-text text-muted mb-4">
-                            Monitor and manage your inventory with ease.
-                        </p>
-                        <a href="{{ url_for('main.inventory') }}" class="btn btn-outline-primary px-4">
-                            Learn More
-                        </a>
-                    </div>
+        <h2 class="mb-4 wow fadeIn" data-wow-delay="0.2s">Why Choose Instox?</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="feature-card p-4 shadow-lg wow slideInUp" data-wow-delay="0.4s">
+                    <i class="fas fa-chart-line fa-4x mb-3 text-primary"></i>
+                    <h4>Automated Inventory Control</h4>
+                    <p>Monitor and manage inventory in real-time with intelligent recommendations.</p>
                 </div>
             </div>
-            <!-- Feature 2: Demand Forecasting -->
-            <div class="col-md-4 animate__animated animate__fadeInUp animate__delay-1s">
-                <div class="card border-0 shadow-sm h-100 feature-card">
-                    <div class="card-body text-center p-4">
-                        <div class="icon-circle bg-success text-white mx-auto mb-4">
-                            <i class="fas fa-chart-line fa-3x"></i>
-                        </div>
-                        <h5 class="card-title fw-bold mb-3">Demand Forecasting</h5>
-                        <p class="card-text text-muted mb-4">
-                            Predict future product demand and optimize stock levels.
-                        </p>
-                        <a href="{{ url_for('main.forecast') }}" class="btn btn-outline-success px-4">
-                            Learn More
-                        </a>
-                    </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature-card p-4 shadow-lg wow slideInUp" data-wow-delay="0.6s">
+                    <i class="fas fa-shield-alt fa-4x mb-3 text-primary"></i>
+                    <h4>Delivery Verification</h4>
+                    <p>Ensure accurate deliveries with AI-powered cross-checking mechanisms.</p>
                 </div>
             </div>
-            <!-- Feature 3: Product Recommendation -->
-            <div class="col-md-4 animate__animated animate__fadeInUp animate__delay-2s">
-                <div class="card border-0 shadow-sm h-100 feature-card">
-                    <div class="card-body text-center p-4">
-                        <div class="icon-circle bg-warning text-white mx-auto mb-4">
-                            <i class="fas fa-cogs fa-3x"></i>
-                        </div>
-                        <h5 class="card-title fw-bold mb-3">Product Recommendations</h5>
-                        <p class="card-text text-muted mb-4">
-                            Receive automated recommendations for new stock based on trends.
-                        </p>
-                        <a href="{{ url_for('main.recommendations') }}" class="btn btn-outline-warning px-4">
-                            Learn More
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row g-4 mt-4">
-            <!-- Feature 4: Reduction Sales -->
-            <div class="col-md-4 animate__animated animate__fadeInUp">
-                <div class="card border-0 shadow-sm h-100 feature-card">
-                    <div class="card-body text-center p-4">
-                        <div class="icon-circle bg-info text-white mx-auto mb-4">
-                            <i class="fas fa-tags fa-3x"></i>
-                        </div>
-                        <h5 class="card-title fw-bold mb-3">Reduction Sales Recommendations</h5>
-                        <p class="card-text text-muted mb-4">
-                            Get smart suggestions for clearance sales to reduce old stock.
-                        </p>
-                        <a href="{{ url_for('main.reduction_sales') }}" class="btn btn-outline-info px-4">
-                            Learn More
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <!-- Feature 5: Turnover Calculation -->
-            <div class="col-md-4 animate__animated animate__fadeInUp animate__delay-1s">
-                <div class="card border-0 shadow-sm h-100 feature-card">
-                    <div class="card-body text-center p-4">
-                        <div class="icon-circle bg-danger text-white mx-auto mb-4">
-                            <i class="fas fa-dollar-sign fa-3x"></i>
-                        </div>
-                        <h5 class="card-title fw-bold mb-3">Turnover Calculation</h5>
-                        <p class="card-text text-muted mb-4">
-                            Accurately calculate your business turnover within given profit margins.
-                        </p>
-                        <a href="{{ url_for('main.turnover') }}" class="btn btn-outline-danger px-4">
-                            Learn More
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <!-- Feature 6: Business Growth Analytics -->
-            <div class="col-md-4 animate__animated animate__fadeInUp animate__delay-2s">
-                <div class="card border-0 shadow-sm h-100 feature-card">
-                    <div class="card-body text-center p-4">
-                        <div class="icon-circle bg-secondary text-white mx-auto mb-4">
-                            <i class="fas fa-chart-bar fa-3x"></i>
-                        </div>
-                        <h5 class="card-title fw-bold mb-3">Business Growth Analytics</h5>
-                        <p class="card-text text-muted mb-4">
-                            Track your business's performance and growth over time.
-                        </p>
-                        <a href="{{ url_for('main.growth_analytics') }}" class="btn btn-outline-secondary px-4">
-                            Learn More
-                        </a>
-                    </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature-card p-4 shadow-lg wow slideInUp" data-wow-delay="0.8s">
+                    <i class="fas fa-dollar-sign fa-4x mb-3 text-primary"></i>
+                    <h4>Profit Analysis</h4>
+                    <p>Track sales, profitability, and business growth with insightful analytics.</p>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<!-- Call-to-Action Section -->
-<div class="container-fluid cta-section text-white py-5" style="background: linear-gradient(135deg, #2575fc, #6a11cb); position: relative; overflow: hidden;">
-    <div class="container text-center position-relative z-1">
-        <h2 class="fw-bold mb-4 animate__animated animate__fadeInDown">Ready to Simplify Your Business?</h2>
-        <p class="lead mb-4 animate__animated animate__fadeInUp">
-            Join thousands of businesses that trust Instox for their inventory management needs.
+<!-- About Section -->
+<section id="about" class="about bg-light py-5">
+    <div class="container text-center">
+        <h2 class="mb-4 wow fadeIn" data-wow-delay="0.2s">About Instox</h2>
+        <p class="wow fadeInUp" data-wow-delay="0.4s">
+            Instox revolutionizes small-scale retail businesses by automating processes, reducing errors, and boosting profitability. From inventory management to sales optimization, our platform is designed to make your business thrive.
         </p>
     </div>
-    <!-- Animated Background -->
-    <div class="cta-shapes">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-        <div class="shape shape-3"></div>
-    </div>
-</div>
+</section>
 
-<!-- Footer Section -->
-<div class="container-fluid bg-dark text-white text-center py-3">
-    <p class="small mb-0">
-        &copy; {{ current_year }} Instox. All rights reserved. Designed for excellence.
-    </p>
-</div>
+<!-- Contact Section -->
+<section id="contact" class="contact py-5">
+    <div class="container text-center">
+        <h2 class="mb-4 wow fadeIn" data-wow-delay="0.2s">Get in Touch</h2>
+        <form action="#" method="post" class="wow fadeInUp" data-wow-delay="0.4s">
+            <input type="text" class="form-control mb-3" placeholder="Your Name" required>
+            <input type="email" class="form-control mb-3" placeholder="Your Email" required>
+            <textarea class="form-control mb-3" placeholder="Your Message" rows="4" required></textarea>
+            <button type="submit" class="btn btn-primary">Send Message</button>
+        </form>
+    </div>
+</section>
 {% endblock %}
