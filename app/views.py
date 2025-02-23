@@ -1,11 +1,14 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for
+import secrets
+
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session
 import sqlite3
-from flask import session
+import google.generativeai as genai  # Import Google Generative AI
+
 
 main = Blueprint("main", __name__)
 
 # Set the secret key for session management
-main.secret_key = 'your_secret_key_here'
+main.secret_key = secrets.token_hex(32)
 
 # Database connection setup
 db = sqlite3.connect('instox.db', check_same_thread=False)
@@ -18,11 +21,17 @@ try:
 except Exception as e:
     print(f"Database connection failed: {e}")
 
+# Set your OpenAI API key
+genai.configure(api_key="AIzaSyB3LOuTzD_6VdUF0q0jj63wWTHIX0xNUZI")  # Replace with your actual API key
+
 verification_codes = {}
+
+
 
 @main.route("/")
 def home():
     return render_template("home.html")
+
 
 @main.route("/inventory")
 def inventory():
@@ -34,6 +43,7 @@ def inventory():
     ]
     return render_template("inventory.html", inventory=inventory_data)
 
+
 @main.route("/delivery", methods=["GET", "POST"])
 def delivery():
     if request.method == "POST":
@@ -42,6 +52,7 @@ def delivery():
         status = "Verified" if delivery_id == "12345" else "Not Verified"
         return jsonify({"status": status, "id": delivery_id})
     return render_template("delivery.html")
+
 
 @main.route("/profit-analysis")
 def profit_analysis():
@@ -53,11 +64,13 @@ def profit_analysis():
     }
     return render_template("profit_analysis.html", data=profit_data)
 
+
 @main.route("/contact", methods=["POST"])
 def contact():
     data = request.form
     print("Contact Form Data:", data)
     return redirect(url_for("main.home"))
+
 
 # New Routes
 @main.route("/forecast")
@@ -65,26 +78,146 @@ def forecast():
     # Placeholder for demand forecasting logic
     return render_template("forecast.html")
 
+
 @main.route("/recommendations")
 def recommendations():
     # Placeholder for product recommendations logic
     return render_template("recommendations.html")
+
 
 @main.route("/reduction_sales")
 def reduction_sales():
     # Placeholder for reduction sales recommendations logic
     return render_template("reduction_sales.html")
 
+
 @main.route("/turnover")
 def turnover():
     # Placeholder for turnover calculation logic
     return render_template("turnover.html")
+
 
 @main.route("/growth_analytics")
 def growth_analytics():
     # Placeholder for business growth analytics logic
     return render_template("growth_analytics.html")
 
+
+# Configure Google Generative AI
+
+
+# Function to set up the Gemini model
+def setup_model():
+    """
+    Configure and return the Gemini generative model with appropriate settings.
+    """
+    model = genai.GenerativeModel(
+        model_name="models/gemini-1.5-flash",
+        generation_config={
+            "temperature": 0.7,
+            "max_output_tokens": 500,
+        }
+    )
+    return model
+
+
+# Chatbot route using Gemini
+@main.route("/chatbot", methods=["POST"])
+def chatbot():
+    user_message = request.json.get("message")
+
+    conversation = []
+
+    SYSTEM_PROMPT = '''
+You are **Instox Assistant**, an AI-powered chatbot for the **Smart Retail Management System**. Your goal is to assist users with inventory management, sales analytics, demand forecasting, and business growth optimization. Your responses should be **clear, concise, and actionable**.
+
+### **Chatbot Guidelines:**
+
+1. **Greet the User:**
+   Start with a **friendly and professional** greeting.
+   _Example:_ "Hello! Welcome to Instox. How can I assist you today?"
+
+2. **Understand the Query:**
+   Ask clarifying questions if the user's query is unclear.
+   _Example:_ "Could you provide more details about your inventory issue?"
+
+3. **Inventory Management:**
+   - Provide guidance on tracking stock levels, reordering products, and optimizing inventory.
+   - Suggest tools like the **Inventory Management** dashboard.
+   _Example:_ "You can track your inventory levels in real-time using the Inventory Management section. Would you like to learn more?"
+
+4. **Sales Analytics:**
+   - Help users analyze sales trends, profit margins, and turnover rates.
+   - Suggest tools like the **Profit Analysis** and **Turnover Calculation** features.
+   _Example:_ "You can analyze your sales trends and profit margins using the Profit Analysis tool. Would you like to explore it?"
+
+5. **Demand Forecasting:**
+   - Assist with predicting future product demand based on historical data.
+   - Suggest tools like the **Demand Forecasting** feature.
+   _Example:_ "You can predict future demand using the Demand Forecasting tool. Would you like to generate a forecast?"
+
+6. **Business Growth Analytics:**
+   - Provide insights into business growth and profitability.
+   - Suggest tools like the **Growth Analytics** dashboard.
+   _Example:_ "You can track your business growth and profitability using the Growth Analytics tool. Would you like to see your performance metrics?"
+
+7. **Reduction Sales Recommendations:**
+   - Offer strategies for clearing old or slow-moving stock.
+   - Suggest tools like the **Reduction Sales** feature.
+   _Example:_ "You can get recommendations for clearing old stock using the Reduction Sales tool. Would you like to explore it?"
+
+8. **Troubleshooting:**
+   - If the user encounters issues with the platform, guide them through troubleshooting steps.
+   _Example:_ "It seems like you're having trouble accessing the dashboard. Have you tried clearing your browser cache?"
+
+9. **Escalation (If Unresolved):**
+   - If the issue cannot be resolved, recommend contacting support or visiting the help section.
+   _Example:_ "If the issue persists, please contact our support team for further assistance."
+
+10. **Polite Closing:**
+   - End on a positive note.
+   _Example:_ "Thank you for using Instox! Let me know if you need further assistance."
+
+11. **Handle Unexpected Input:**
+   - If the user's input is unclear, ask clarifying questions without looping.
+   _Example:_ "I'm not sure I understand. Could you provide more details?"
+
+12. **Log Queries:**
+   - Ensure all user queries are logged for future analysis and system improvement.
+
+### **Rules:**
+- Responses should be **short and clear**.
+- Focus on **retail management and inventory control**.
+- Avoid discussing unrelated topics.
+- Always maintain a **professional and helpful tone**.
+'''
+
+    try:
+        # Add user message to conversation history
+        conversation.append({"role": "user", "content": user_message})
+
+        # Combine conversation history into a single context string
+        context = SYSTEM_PROMPT + "\nPrevious Conversations:\n" + "\n".join([msg["content"] for msg in conversation[-6:]]) + "\n\nCurrent Query:\n" + user_message
+
+        # Generate response using Gemini model
+        model = setup_model()
+        response = model.generate_content(context)
+        chatbot_reply = response.text
+
+        # Add chatbot response to conversation history
+        conversation.append({"role": "assistant", "content": chatbot_reply})
+        session.modified = True
+
+        return jsonify({"reply": chatbot_reply})
+
+    except Exception as e:
+        print(f"Error in chatbot route: {str(e)}")
+        return jsonify({"error": "An error occurred while processing your request. Please try again."}), 500
+
+# Other routes remain unchanged
+@main.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")
 
 @main.route("/owner_login", methods=["GET", "POST"])
 def owner_login():
@@ -97,11 +230,13 @@ def owner_login():
 
         if user:
             # session['user_id'] = user[0]
-            return jsonify({"message": "Login successful."}), 200
+            return render_template("dashboard.html"), 200
         else:
             return jsonify({"message": "Invalid email or password."}), 401
 
     return render_template("login.html")
+
+
 @main.route("/owner_register", methods=["GET", "POST"])
 def register_owner():
     if request.method == "POST":
@@ -123,24 +258,4 @@ def register_owner():
         return jsonify({"message": "Registration successful."}), 201
 
     return render_template("owner_register.html")
-def send_email_otp(email, otp):
-    # Dummy email function (configure properly in production)
-    print(f"Sending email to {email} with OTP: {otp}")
-    # SMTP setup and email sending can be implemented here.
 
-@main.route("/verify-email", methods=["POST"])
-def verify_email():
-    email = request.json.get("email")
-    otp = request.json.get("otp")
-    if email in verification_codes and verification_codes[email]["email_otp"] == otp:
-        return jsonify({"message": "Email verified successfully!"}), 200
-    return jsonify({"error": "Invalid OTP"}), 400
-
-@main.route("/verify-phone", methods=["POST"])
-def verify_phone():
-    phone = request.json.get("phone")
-    otp = request.json.get("otp")
-    for key, value in verification_codes.items():
-        if value["phone_otp"] == otp:
-            return jsonify({"message": "Phone verified successfully!"}), 200
-    return jsonify({"error": "Invalid OTP"}), 400
