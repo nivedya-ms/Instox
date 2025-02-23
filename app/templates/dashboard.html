@@ -2,9 +2,90 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instox Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-brand">Instox</div>
+        <ul class="navbar-nav">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#inventory">Inventory</a></li>
+            <li><a href="#sales">Sales</a></li>
+            <li><a href="#growth">Growth Analytics</a></li>
+            <li><a href="#forecast">Demand Forecast</a></li>
+            <li><a href="#turnover">Turnover</a></li>
+            <li><a href="#reduction">Reduction Sales</a></li>
+        </ul>
+        <button id="chatbot-button" class="chatbot-button">
+            <i class="fas fa-robot"></i> Chatbot
+        </button>
+    </nav>
 
+    <!-- Dashboard Content -->
+    <div class="dashboard">
+        <h1>Welcome to Instox Dashboard</h1>
+        <div class="features-grid">
+            <!-- Feature 1: Inventory Management -->
+            <div class="feature-card" id="inventory">
+                <h2>Inventory Management</h2>
+                <p>Manage your stock levels and optimize inventory.</p>
+                <button onclick="location.href='/inventory'">Go to Inventory</button>
+            </div>
+
+            <!-- Feature 2: Sales Forecasting -->
+            <div class="feature-card" id="sales">
+                <h2>Sales Forecasting</h2>
+                <p>Predict future sales based on historical data.</p>
+                <button onclick="location.href='/sales'">Go to Sales</button>
+            </div>
+
+            <!-- Feature 3: Business Growth Analytics -->
+            <div class="feature-card" id="growth">
+                <h2>Business Growth Analytics</h2>
+                <p>Analyze your business growth and profitability.</p>
+                <button onclick="location.href='/growth'">Go to Growth</button>
+            </div>
+
+            <!-- Feature 4: Demand Forecasting -->
+            <div class="feature-card" id="forecast">
+                <h2>Demand Forecasting</h2>
+                <p>Forecast product demand using advanced models.</p>
+                <button onclick="location.href='/forecast'">Go to Forecast</button>
+            </div>
+
+            <!-- Feature 5: Turnover Calculation -->
+            <div class="feature-card" id="turnover">
+                <h2>Turnover Calculation</h2>
+                <p>Calculate retail prices and profit margins.</p>
+                <button onclick="location.href='/turnover'">Go to Turnover</button>
+            </div>
+
+            <!-- Feature 6: Reduction Sales Recommendations -->
+            <div class="feature-card" id="reduction">
+                <h2>Reduction Sales</h2>
+                <p>Get recommendations for clearing old stock.</p>
+                <button onclick="location.href='/reduction'">Go to Reduction</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Widget -->
+    <div id="chatbot-widget" class="chatbot-widget">
+        <div class="chatbot-header">
+            <h3>Instox Chatbot</h3>
+            <button id="close-chatbot"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="chatbot-body">
+            <div id="chatbot-messages"></div>
+            <input type="text" id="chatbot-input" placeholder="Type your message...">
+            <button id="send-message">Send</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 </html>

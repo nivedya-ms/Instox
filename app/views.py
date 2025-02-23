@@ -85,6 +85,9 @@ def growth_analytics():
     # Placeholder for business growth analytics logic
     return render_template("growth_analytics.html")
 
+@main.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")
 
 @main.route("/owner_login", methods=["GET", "POST"])
 def owner_login():
@@ -97,7 +100,7 @@ def owner_login():
 
         if user:
             # session['user_id'] = user[0]
-            return jsonify({"message": "Login successful."}), 200
+            return redirect(url_for("main.dashboard")), 200
         else:
             return jsonify({"message": "Invalid email or password."}), 401
 
