@@ -6,14 +6,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatInput = document.getElementById('chatbot-input');
     const sendButton = document.getElementById('send-message');
 
-    // Toggle chatbot visibility
-    chatbotButton.addEventListener('click', () => {
-        chatbotWidget.classList.toggle('active');
-    });
 
-    closeButton.addEventListener('click', () => {
-        chatbotWidget.classList.remove('active');
-    });
+
+    if (chatbotButton && chatbotWidget) {
+        // Toggle chatbot visibility
+        chatbotButton.addEventListener('click', () => {
+            chatbotWidget.classList.toggle('active');
+        });
+    } else {
+        console.error('Chatbot button or widget not found!');
+    }
+
+    if (closeButton) {
+        // Close chatbot widget
+        closeButton.addEventListener('click', () => {
+            chatbotWidget.classList.remove('active');
+        });
+    } else {
+        console.warn('Close button not found!');
+    }
+
 
     // Handle message sending
     async function sendMessage() {

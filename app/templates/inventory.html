@@ -8,6 +8,11 @@
         Effortlessly manage your stock levels. Track products, adjust quantities, and ensure you're always ready for your customers’ needs.
     </p>
 
+    <!-- Upload PDF Modal Button -->
+    <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#pdfUploadModal">
+        Upload PDF
+    </button>
+
     <!-- Inventory Table -->
     <div class="table-responsive">
         <table class="table table-striped table-bordered">
@@ -35,4 +40,80 @@
         </table>
     </div>
 </div>
+
+<!-- PDF Upload Modal -->
+<div class="modal" id="pdfUploadModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload PDF</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="pdfUploadForm">
+                    <input type="file" name="file" id="pdfFile" class="form-control mb-3" accept=".pdf">
+                    <button type="button" onclick="uploadPDF()" class="btn btn-primary">Submit</button>
+                </form>
+                <div id="pdfTableContainer" class="mt-4"></div>
+                <button onclick="saveInventory()" class="btn btn-success mt-3">Done</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function uploadPDF() {
+        const fileInput = document.getElementById("pdfFile");
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        fetch("/upload_pdf", {
+            method: "POST",
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                let tableHTML = `<table class="table"><thead><tr><th>Select</th><th>Product Name</th><th>Quantity</th><th>Quantifier</th><th>Price</th></tr></thead><tbody>`;
+                data.data.forEach((item, index) => {
+                    tableHTML += `<tr>
+                        <td><input type="checkbox" name="product" value="${index}"></td>
+                        <td>${item["Product Name"]}</td>
+                        <td>${item["Product Quantity"]}</td>
+                        <td>${item["Quantifier"]}</td>
+                        <td>${item["Price"]}</td>
+                    </tr>`;
+                });
+                tableHTML += `</tbody></table>`;
+                document.getElementById("pdfTableContainer").innerHTML = tableHTML;
+            }
+        });
+    }
+
+    function saveInventory() {
+        let selectedItems = [];
+        document.querySelectorAll("input[name='product']:checked").forEach((checkbox) => {
+            let row = checkbox.closest("tr");
+            selectedItems.push({
+                "Product Name": row.cells[1].textContent,
+                "Product Quantity": row.cells[2].textContent,
+                "Quantifier": row.cells[3].textContent,
+                "Price": row.cells[4].textContent
+            });
+        });
+
+        fetch("/save_inventory", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ selected_items: selectedItems })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            window.location.reload();
+        });
+    }
+</script>
 {% endblock %}

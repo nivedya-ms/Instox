@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row align-items-center">
+        <div class="col-md-8 mx-auto text-center">
+            <h1 class="fw-bold text-dark mb-4 animate__animated animate__fadeInDown">Clear Out, Cash In!</h1>
+            <p class="lead text-muted mb-4 animate__animated animate__fadeInUp">
+                Old stock doesn’t have to be a headache. Our <span class="text-info fw-bold">Reduction Sales Recommendations</span> feature uses smart algorithms to suggest the perfect discounts for clearing out slow-moving items. Turn dead stock into cash flow and make room for new opportunities!
+            </p>
+            <div class="icon-circle bg-info text-white mx-auto mb-4 animate__animated animate__bounceIn">
+                <i class="fas fa-tags fa-3x"></i>
+            </div>
+            <a href="{{ url_for('main.reduction_sales') }}" class="btn btn-info btn-lg px-5 py-3 animate__animated animate__fadeInUp">
+                Explore Reduction Sales
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

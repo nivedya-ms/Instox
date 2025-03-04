@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row align-items-center">
+        <div class="col-md-8 mx-auto text-center">
+            <h1 class="fw-bold text-dark mb-4 animate__animated animate__fadeInDown">Watch Your Business Soar!</h1>
+            <p class="lead text-muted mb-4 animate__animated animate__fadeInUp">
+                Growth isn’t just a goal—it’s a journey. Our <span class="text-secondary fw-bold">Business Growth Analytics</span> feature gives you a bird’s-eye view of your business’s performance. Track sales trends, monitor profitability, and uncover new opportunities to take your business to the next level.
+            </p>
+            <div class="icon-circle bg-secondary text-white mx-auto mb-4 animate__animated animate__bounceIn">
+                <i class="fas fa-chart-bar fa-3x"></i>
+            </div>
+            <a href="{{ url_for('main.growth_analytics') }}" class="btn btn-secondary btn-lg px-5 py-3 animate__animated animate__fadeInUp">
+                Explore Growth Analytics
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

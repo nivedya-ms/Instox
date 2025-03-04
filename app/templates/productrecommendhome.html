@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row align-items-center">
+        <div class="col-md-8 mx-auto text-center">
+            <h1 class="fw-bold text-dark mb-4 animate__animated animate__fadeInDown">Discover Your Next Best-Seller!</h1>
+            <p class="lead text-muted mb-4 animate__animated animate__fadeInUp">
+                What’s hot and what’s not? Our <span class="text-warning fw-bold">Product Recommendations</span> feature uses cutting-edge AI to analyze trends and suggest the next big thing for your inventory. From seasonal must-haves to customer favorites, we’ll help you stay ahead of the curve and boost your sales!
+            </p>
+            <div class="icon-circle bg-warning text-white mx-auto mb-4 animate__animated animate__bounceIn">
+                <i class="fas fa-cogs fa-3x"></i>
+            </div>
+            <a href="{{ url_for('main.recommendations') }}" class="btn btn-warning btn-lg px-5 py-3 animate__animated animate__fadeInUp">
+                Explore Product Recommendations
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

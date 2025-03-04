@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row align-items-center">
+        <div class="col-md-8 mx-auto text-center">
+            <h1 class="fw-bold text-dark mb-4 animate__animated animate__fadeInDown">Predict the Future of Your Sales!</h1>
+            <p class="lead text-muted mb-4 animate__animated animate__fadeInUp">
+                What if you could predict the future? With our <span class="text-success fw-bold">Demand Forecasting</span> feature, you can! Using advanced machine learning models, we analyze your sales history to predict future demand. No more guessing games—just data-driven decisions that keep your shelves stocked and your customers happy.
+            </p>
+            <div class="icon-circle bg-success text-white mx-auto mb-4 animate__animated animate__bounceIn">
+                <i class="fas fa-chart-line fa-3x"></i>
+            </div>
+            <a href="{{ url_for('main.forecast') }}" class="btn btn-success btn-lg px-5 py-3 animate__animated animate__fadeInUp">
+                Explore Demand Forecasting
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

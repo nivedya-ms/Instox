@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session
 import sqlite3
+from flask import flash
+
 
 main = Blueprint("main", __name__)
 
@@ -77,3 +79,38 @@ def register_owner():
         return render_template("login.html"), 201
 
     return render_template("owner_register.html")
+@main.route('/logout')
+def logout():
+    session.clear()  # Clear session
+    flash("You have successfully logged out.", "success")  # Flash Message
+    return redirect(url_for('main.owner_login'))  # Redirect to Login Pa
+
+# Stock Management Route
+@main.route('/features/inventory')
+def inventory_feature():
+    return render_template('Inventoryhome.html')
+
+# Demand Forecasting Route
+@main.route('/features/forecast')
+def forecast_feature():
+    return render_template('demandforecasthome.html')
+
+# Product Recommendations Route
+@main.route('/features/recommendations')
+def recommendations_feature():
+    return render_template('productrecommendhome.html')
+
+# Reduction Sales Route
+@main.route('/features/reduction_sales')
+def reduction_sales_feature():
+    return render_template('reductionsaleshome.html')
+
+# Turnover Calculation Route
+@main.route('/features/turnover')
+def turnover():
+    return render_template('turnoverhome.html')
+
+# Business Growth Analytics Route
+@main.route('/features/growth_analytics')
+def growth_analytics_feature():
+    return render_template('growthanalyticshome.html')

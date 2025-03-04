@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row align-items-center">
+        <div class="col-md-8 mx-auto text-center">
+            <h1 class="fw-bold text-dark mb-4 animate__animated animate__fadeInDown">Crunch the Numbers, Boost the Profits!</h1>
+            <p class="lead text-muted mb-4 animate__animated animate__fadeInUp">
+                Numbers don’t lie, and neither do we! Our <span class="text-danger fw-bold">Turnover Calculation</span> feature helps you analyze your business’s financial health with precision. Calculate profit margins, track turnover rates, and make smarter pricing decisions—all in one place.
+            </p>
+            <div class="icon-circle bg-danger text-white mx-auto mb-4 animate__animated animate__bounceIn">
+                <i class="fas fa-dollar-sign fa-3x"></i>
+            </div>
+            <a href="{{ url_for('main.turnover') }}" class="btn btn-danger btn-lg px-5 py-3 animate__animated animate__fadeInUp">
+                Explore Turnover Calculation
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -101,7 +101,8 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-    </style>
+    </style>\
+        <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -156,6 +157,19 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <!-- Chatbot Widget -->
+    <div id="chatbot-widget" class="chatbot-widget">
+        <div class="chatbot-header">
+            <span>Instox Chatbot</span>
+            <button id="close-chatbot">✖</button>
+        </div>
+        <div class="chatbot-body">
+            <div id="chatbot-messages"></div>
+            <input type="text" id="chatbot-input" placeholder="Type a message...">
+            <button id="send-message">Send</button>
+        </div>
+    </div>
+
+    <script src="dashboard.js" defer></script>
 </body>
 </html>

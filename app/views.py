@@ -3,6 +3,10 @@ import secrets
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session
 import sqlite3
 import google.generativeai as genai  # Import Google Generative AI
+from flask import flash
+from werkzeug.utils import secure_filename
+import os
+import fitz
 
 
 main = Blueprint("main", __name__)
@@ -259,3 +263,101 @@ def register_owner():
 
     return render_template("owner_register.html")
 
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@main.route("/upload_pdf", methods=["POST"])
+def upload_pdf():
+    if "file" not in request.files:
+        return jsonify({"error": "No file part"}), 400
+
+    file = request.files["file"]
+
+    if file.filename == "":
+        return jsonify({"error": "No selected file"}), 400
+
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        file.save(filepath)
+
+        # Extract text from PDF
+        pdf_text = extract_text_from_pdf(filepath)
+
+        # Use Gemini Model for AI-based table extraction
+        model = setup_model()
+        ai_response = model.generate_content(f"Extract tabular data from the following text:\n\n{pdf_text}")
+        table_data = ai_response.text
+
+        # Process extracted data into JSON format
+        extracted_data = process_table_data(table_data)
+
+        return jsonify({"data": extracted_data})
+
+    return jsonify({"error": "Invalid file type"}), 400
+
+
+def extract_text_from_pdf(pdf_path):
+    """
+    Extract text from PDF using PyMuPDF.
+    """
+    text = ""
+    pdf = fitz.open(pdf_path)
+    for page in pdf:
+        text += page.get_text()
+    return text
+
+
+def process_table_data(response_text):
+    """
+    Convert Gemini model text response to structured JSON table data.
+    """
+    table_data = []
+    lines = response_text.split("\n")
+    for line in lines:
+        parts = line.split(",")
+        if len(parts) == 4:
+            table_data.append({
+                "Product Name": parts[0].strip(),
+                "Product Quantity": parts[1].strip(),
+                "Quantifier": parts[2].strip(),
+                "Price": parts[3].strip()
+            })
+    return table_data
+
+@main.route('/logout')
+def logout():
+    session.clear()  # Clear session
+    flash("You have successfully logged out.", "success")  # Flash Message
+    return redirect(url_for('main.owner_login'))  # Redirect to Login Pa
+# Stock Management Route
+@main.route('/features/inventory')
+def inventory_feature():
+    return render_template('Inventoryhome.html')
+
+# Demand Forecasting Route
+@main.route('/features/forecast')
+def forecast_feature():
+    return render_template('demandforecasthome.html')
+
+# Product Recommendations Route
+@main.route('/features/recommendations')
+def recommendations_feature():
+    return render_template('productrecommendhome.html')
+
+# Reduction Sales Route
+@main.route('/features/reduction_sales')
+def reduction_sales_feature():
+    return render_template('reductionsaleshome.html')
+
+# Turnover Calculation Route
+@main.route('/features/turnover')
+def turnover_feature():
+    return render_template('turnoverhome.html')
+
+# Business Growth Analytics Route
+@main.route('/features/growth_analytics')
+def growth_analytics_feature():
+    return render_template('growthanalyticshome.html')
