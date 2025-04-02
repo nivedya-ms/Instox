@@ -114,3 +114,71 @@ def turnover():
 @main.route('/features/growth_analytics')
 def growth_analytics_feature():
     return render_template('growthanalyticshome.html')
+
+@main.route("/add_inventory", methods=["POST"])
+def add_inventory():
+    product_name = request.form.get("product_name")
+    stock_level = request.form.get("stock_level")
+    price = request.form.get("price")
+
+    # Insert into the database
+    cursor.execute("INSERT INTO inventory (name, stock_level, price) VALUES (?, ?, ?)",
+                   (product_name, stock_level, price))
+    db.commit()
+
+    flash("Item added successfully!", "success")
+    return redirect(url_for("main.inventory"))
+@main.route("/delete_inventory/<int:id>", methods=["GET"])
+def delete_inventory(id):
+    # Delete the item from the database
+    cursor.execute("DELETE FROM inventory WHERE id = ?", (id,))
+    db.commit()
+
+    flash("Item deleted successfully!", "success")
+    return redirect(url_for("main.inventory"))
+
+@main.route("/edit_inventory/<int:id>", methods=["GET", "POST"])
+def edit_inventory(id):
+    if request.method == "POST":
+        product_name = request.form.get("product_name")
+        stock_level = request.form.get("stock_level")
+        price = request.form.get("price")
+
+        # Update the item in the database
+        cursor.execute("UPDATE inventory SET name = ?, stock_level = ?, price = ? WHERE id = ?",
+                       (product_name, stock_level, price, id))
+        db.commit()
+
+        flash("Item updated successfully!", "success")
+        return redirect(url_for("main.inventory"))
+
+    # Fetch the item to edit
+    cursor.execute("SELECT * FROM inventory WHERE id = ?", (id,))
+    item = cursor.fetchone()
+
+    return render_template("edit_inventory.html", item=item)
+@main.route("/upload_growth_data", methods=["POST"])
+def upload_growth_data():
+    if 'file' not in request.files:
+        return jsonify({"success": False, "error": "No file uploaded"}), 400
+
+    file = request.files['file']
+    analysis_type = request.form.get("analysis_type")
+
+    if file.filename == "":
+        return jsonify({"success": False, "error": "No file selected"}), 400
+
+    if file and file.filename.endswith('.pdf'):
+        # Save the file (for demonstration purposes)
+        filename = secure_filename(file.filename)
+        filepath = os.path.join("uploads", filename)
+        file.save(filepath)
+
+        # Process the file and generate analysis (dummy response for now)
+        return jsonify({
+            "success": True,
+            "message": "File uploaded and analyzed successfully!",
+            "analysis_type": analysis_type
+        })
+    else:
+        return jsonify({"success": False, "error": "Invalid file type"}), 400

@@ -7,101 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
-            background: linear-gradient(135deg, #e9eef5, #d7e1ec);
-        }
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 2rem;
-            background: #1e3a8a;
-            color: #ffffff;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-        .navbar-brand {
-            font-size: 1.8rem;
-            font-weight: 600;
-            letter-spacing: 2px;
-            cursor: pointer;
-        }
-        .navbar-brand:hover {
-            color: #ffd700;
-        }
-        .navbar-nav {
-            display: flex;
-            gap: 2rem;
-        }
-        .navbar-nav a {
-            text-decoration: none;
-            color: #ffffff;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        .navbar-nav a:hover {
-            color: #ffd700;
-        }
-        .chatbot-button {
-            padding: 0.8rem 1.5rem;
-            background: #ff7f50;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            color: white;
-            transition: background 0.3s;
-        }
-        .chatbot-button:hover {
-            background: #ff6347;
-        }
-        .dashboard h1 {
-            text-align: center;
-            margin: 2rem 0;
-            color: #1e3a8a;
-            animation: fadeIn 1s ease-in-out;
-        }
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-            padding: 2rem;
-            animation: fadeIn 1s ease-in-out;
-        }
-        .feature-card {
-            padding: 2rem;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s;
-            text-align: center;
-        }
-        .feature-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-        }
-        .feature-card h2 {
-            color: #1e3a8a;
-        }
-        .feature-card button {
-            padding: 0.8rem 1.5rem;
-            border: none;
-            background: #1e3a8a;
-            color: white;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        .feature-card button:hover {
-            background: #ffd700;
-            color: #1e3a8a;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -109,8 +14,8 @@
         <ul class="navbar-nav">
             <li><a href="/home">Home</a></li>
             <li><a href="/inventory">Inventory</a></li>
-            <li><a href="#sales">Sales</a></li>
-            <li><a href="#growth">Growth Analytics</a></li>
+            <li><a href="/recommendations">Sales</a></li>
+            <li><a href="/growth_analytics">Growth Analytics</a></li>
             <li><a href="#forecast">Demand Forecast</a></li>
             <li><a href="#turnover">Turnover</a></li>
             <li><a href="#reduction">Reduction Sales</a></li>
@@ -129,14 +34,14 @@
                 <button onclick="location.href='/inventory'">Explore</button>
             </div>
             <div class="feature-card" id="sales">
-                <h2>Sales Forecasting</h2>
-                <p>Predict future sales based on historical data.</p>
-                <button onclick="location.href='/sales'">Explore</button>
+                <h2>SmartStock List</h2>
+                <p>Automated purchase list for smart and efficient restocking.</p>
+                <button onclick="location.href='/recommendations'">Explore</button>
             </div>
             <div class="feature-card" id="growth">
                 <h2>Business Growth Analytics</h2>
                 <p>Analyze your business growth and profitability.</p>
-                <button onclick="location.href='/growth'">Explore</button>
+                <button onclick="location.href='/growth_analytics'">Explore</button>
             </div>
             <div class="feature-card" id="forecast">
                 <h2>Demand Forecasting</h2>
@@ -153,6 +58,23 @@
                 <p>Get recommendations for clearing old stock.</p>
                 <button onclick="location.href='/reduction'">Explore</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Widget -->
+    <div id="chatbot-widget" class="chatbot-widget">
+        <div class="chatbot-header">
+            <h3>Instox Assistant</h3>
+            <button id="close-chatbot" class="close-button">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="chatbot-messages" class="chatbot-messages"></div>
+        <div class="chatbot-input-container">
+            <input type="text" id="chatbot-input" placeholder="Type your message...">
+            <button id="send-message" class="send-button">
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </div>
     </div>
 

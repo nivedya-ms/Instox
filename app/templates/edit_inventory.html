@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="fw-bold text-dark mb-4">Edit Inventory Item</h2>
+    <form action="{{ url_for('main.edit_inventory', id=item.uid) }}" method="POST">
+        <div class="row">
+            <div class="col-md-4">
+                <label for="productName" class="form-label">Product Name</label>
+                <input type="text" class="form-control" id="productName" name="product_name" value="{{ item.name }}" required>
+            </div>
+            <div class="col-md-2">
+                <label for="stockLevel" class="form-label">Stock Level</label>
+                <input type="number" class="form-control" id="stockLevel" name="stock_level" value="{{ item.stock_level }}" required>
+            </div>
+            <div class="col-md-2">
+                <label for="price" class="form-label">Price</label>
+                <input type="number" step="0.01" class="form-control" id="price" name="price" value="{{ item.price }}" required>
+            </div>
+            <div class="col-md-4 align-self-end">
+                <button type="submit" class="btn btn-primary">Update Item</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -2,25 +2,132 @@
 
 {% block content %}
 <div class="container my-5">
-    <h2 class="fw-bold text-dark mb-4">Product Recommendations</h2>
+    <h2 class="fw-bold text-dark mb-4">Mailing Product List for Purchase</h2>
     <p class="text-muted mb-4">
-        Based on past sales and demand trends, Instox recommends products that your customers are likely to buy next. Stay ahead of the competition with intelligent recommendations.
+        Automatically generate a product list for purchase based on demand forecasting. You can also manually add or remove items.
     </p>
 
-    <!-- Recommendations Display -->
-    <div class="row">
-        {% for recommended_product in recommended_products %}
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm">
-                <img src="{{ recommended_product.image_url }}" class="card-img-top" alt="{{ recommended_product.name }}">
-                <div class="card-body">
-                    <h5 class="card-title">{{ recommended_product.name }}</h5>
-                    <p class="card-text">{{ recommended_product.description }}</p>
-                    <a href="{{ url_for('main.view_product', id=recommended_product.id) }}" class="btn btn-primary">View Product</a>
-                </div>
-            </div>
+    <!-- Automatically Added Products -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">Automatically Added Products</h5>
         </div>
-        {% endfor %}
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Quantity</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="autoProducts">
+                    <!-- Dummy Data -->
+                    <tr>
+                        <td>Product A</td>
+                        <td>50</td>
+                        <td><button class="btn btn-danger btn-sm" disabled>Remove</button></td>
+                    </tr>
+                    <tr>
+                        <td>Product B</td>
+                        <td>30</td>
+                        <td><button class="btn btn-danger btn-sm" disabled>Remove</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Manually Add Products -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="card-title mb-0">Manually Add Products</h5>
+        </div>
+        <div class="card-body">
+            <form id="addProductForm">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="productName" class="form-label">Product Name</label>
+                        <input type="text" class="form-control" id="productName" placeholder="Enter product name" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="productQuantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="productQuantity" placeholder="Enter quantity" required>
+                    </div>
+                    <div class="col-md-2 align-self-end">
+                        <button type="submit" class="btn btn-primary">Add Product</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Manually Added Products -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-white">
+            <h5 class="card-title mb-0">Manually Added Products</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Quantity</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="manualProducts">
+                    <!-- Dummy Data -->
+                    <tr>
+                        <td>Product C</td>
+                        <td>20</td>
+                        <td><button class="btn btn-danger btn-sm" onclick="removeProduct(this)">Remove</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Download as PDF -->
+    <div class="text-center">
+        <button class="btn btn-success btn-lg" onclick="downloadPDF()">
+            <i class="fas fa-download"></i> Download as PDF
+        </button>
     </div>
 </div>
+
+<script>
+    // Function to add a product manually
+    document.getElementById('addProductForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const productName = document.getElementById('productName').value;
+        const productQuantity = document.getElementById('productQuantity').value;
+
+        if (productName && productQuantity) {
+            const newRow = `
+                <tr>
+                    <td>${productName}</td>
+                    <td>${productQuantity}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="removeProduct(this)">Remove</button></td>
+                </tr>
+            `;
+            document.getElementById('manualProducts').insertAdjacentHTML('beforeend', newRow);
+
+            // Clear the form
+            document.getElementById('productName').value = '';
+            document.getElementById('productQuantity').value = '';
+        }
+    });
+
+    // Function to remove a product
+    function removeProduct(button) {
+        const row = button.closest('tr');
+        row.remove();
+    }
+
+    // Function to simulate PDF download
+    function downloadPDF() {
+        alert("Downloading PDF... (Dummy functionality for now)");
+    }
+</script>
 {% endblock %}

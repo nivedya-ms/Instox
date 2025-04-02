@@ -1,7 +1,8 @@
 import secrets
-
+import requests
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session
 import sqlite3
+import joblib
 import google.generativeai as genai  # Import Google Generative AI
 from flask import flash
 from werkzeug.utils import secure_filename
@@ -9,11 +10,11 @@ import os
 import fitz
 
 
+
 main = Blueprint("main", __name__)
 
 # Set the secret key for session management
 main.secret_key = secrets.token_hex(32)
-
 # Database connection setup
 db = sqlite3.connect('instox.db', check_same_thread=False)
 cursor = db.cursor()
@@ -31,6 +32,25 @@ genai.configure(api_key="AIzaSyB3LOuTzD_6VdUF0q0jj63wWTHIX0xNUZI")  # Replace wi
 verification_codes = {}
 
 
+# Load the trained model
+model = joblib.load('demand_model.pkl')
+
+# Define feature names (must match what was used in training)
+features = ['week_num', 'month', 'sale_price', 'stock_age_days', 'price_age_interaction',
+            'category_Beachwear', 'category_Casual Wear', 'category_Cultural Souvenirs',
+            'category_DIY Craft Kits', 'category_Dance Costumes', 'category_Eco-Friendly Textiles',
+            'category_Ethnic Footwear', 'category_Fabrics', 'category_Festive Wear', 'category_Formal Wear',
+            'category_Handicraft Textiles', 'category_Home Textiles', 'category_Industrial Textiles',
+            'category_Kids’ Clothing', 'category_Luxury Textiles', 'category_Maternity Wear',
+            'category_Medical Textiles', 'category_Nightwear & Loungewear', 'category_Outdoor Gear Textiles',
+            'category_Party Wear', 'category_Pet Clothing', 'category_Plus-Size Clothing',
+            'category_Rain Accessories', 'category_Religious Attire', 'category_School Uniforms',
+            'category_Seasonal Textiles', 'category_Sleep Accessories', 'category_Specialty Fabrics',
+            'category_Sports & Activewear', 'category_Traditional Wear', 'category_Travel Textiles',
+            'category_Vintage Textiles', 'category_Wedding Collection', 'category_Western Wear',
+            'category_Winter Wear', 'category_Workwear', 'category_Yoga & Meditation Wear']
+
+
 
 @main.route("/")
 def home():
@@ -39,13 +59,30 @@ def home():
 
 @main.route("/inventory")
 def inventory():
-    # Simulated inventory data
-    inventory_data = [
-        {"item": "Product A", "stock": 10},
-        {"item": "Product B", "stock": 5},
-        {"item": "Product C", "stock": 20},
-    ]
-    return render_template("inventory.html", inventory=inventory_data)
+    if 'user_id' in session:
+        user_id = session['user_id']
+
+        try:
+            print("Session Content:", session)
+            cursor.execute("SELECT uid, name, stock_level, price FROM inventory WHERE uid = ?", (user_id,))
+            inventory_items = cursor.fetchall()
+
+            # Convert rows to dictionary-like objects
+            inventory_items = [
+                {"id": item[0], "name": item[1], "stock_level": item[2], "price": item[3]}
+                for item in inventory_items
+            ]
+
+            print(f"Inventory Items for User {user_id}: {inventory_items}")
+            return render_template("inventory.html", inventory_items=inventory_items)
+
+        except Exception as e:
+            print(f"Database query failed: {e}")
+            return "Failed to load inventory items"
+
+    else:
+        print("User not logged in")
+        return "Unauthorized Access"
 
 
 @main.route("/delivery", methods=["GET", "POST"])
@@ -76,11 +113,99 @@ def contact():
     return redirect(url_for("main.home"))
 
 
-# New Routes
-@main.route("/forecast")
+@main.route('/predict', methods=['POST'])
+def predict():
+    # Get data from request
+    input_data = request.get_json()
+
+    # Validate input
+    if not input_data:
+        return jsonify({"error": "No input data provided"}), 400
+
+    # Check for missing features
+    missing_features = [feature for feature in features if feature not in input_data]
+    if missing_features:
+        return jsonify({"error": f"Missing required features: {missing_features}"}), 400
+
+    try:
+        # Prepare input in correct order
+        ordered_input = [input_data[feature] for feature in features]
+
+        # Make prediction
+        prediction = model.predict([ordered_input])
+
+        # Return prediction
+        return jsonify({
+            "prediction": prediction[0],
+            "status": "success"
+        })
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "message": "Failed to make prediction"
+        }), 500
+
+
+@main.route("/forecast", methods=['GET', 'POST'])
 def forecast():
-    # Placeholder for demand forecasting logic
-    return render_template("forecast.html")
+    # Fetch all products for the dropdown
+    products = Product.query.all()
+
+    if request.method == 'POST':
+        # Get the selected product ID from the form
+        product_id = request.form.get('product')
+        if not product_id or product_id == "Choose a product...":
+            return render_template('forecast.html', products=products, error="Please select a product")
+
+        try:
+            # Convert product_id to integer and fetch the product
+            product = Product.query.get(int(product_id))
+            if not product:
+                return render_template('forecast.html', products=products, error="Invalid product selected")
+
+            # Get the product's category
+            category = product.category
+
+            # Initialize total forecast demand
+            forecast_demand = 0
+            current_date = datetime.today()
+
+            # Generate predictions for the next 4 weeks
+            for i in range(4):
+                future_date = current_date + timedelta(weeks=i)
+                week_num = future_date.isocalendar()[1]
+                month = future_date.month
+
+                # Prepare input data for the model
+                input_data = {feat: 0 for feat in features}
+                input_data['week_num'] = week_num
+                input_data['month'] = month
+                input_data['sale_price'] = 100  # Placeholder; adjust as needed
+                input_data['stock_age_days'] = 14  # Placeholder
+                input_data['price_age_interaction'] = 100 * 14  # Derived feature
+
+                # Set the category feature (e.g., 'category_Casual Wear')
+                category_feature = f'category_{category}'
+                if category_feature not in features:
+                    return render_template('forecast.html', products=products, error=f"Category '{category}' not recognized")
+                input_data[category_feature] = 1
+
+                # Order the input data according to the model's feature list
+                ordered_input = [input_data[feat] for feat in features]
+
+                # Make prediction and add to total
+                prediction = model.predict([ordered_input])[0]
+                forecast_demand += prediction
+
+            # Render the template with the forecast result
+            return render_template('forecast.html', products=products, forecast_demand=forecast_demand)
+
+        except Exception as e:
+            return render_template('forecast.html', products=products, error=f"An error occurred: {str(e)}")
+
+    # For GET requests, just render the form
+    return render_template('forecast.html', products=products)
 
 
 @main.route("/recommendations")
@@ -233,7 +358,7 @@ def owner_login():
         user = cursor.fetchone()
 
         if user:
-            # session['user_id'] = user[0]
+            session['user_id'] = user[0]
             return render_template("dashboard.html"), 200
         else:
             return jsonify({"message": "Invalid email or password."}), 401
@@ -361,3 +486,76 @@ def turnover_feature():
 @main.route('/features/growth_analytics')
 def growth_analytics_feature():
     return render_template('growthanalyticshome.html')
+
+@main.route("/add_inventory", methods=["POST"])
+def add_inventory():
+    product_name = request.form.get("product_name")
+    stock_level = request.form.get("stock_level")
+    price = request.form.get("price")
+    try:
+        if session:
+            print(f"Session Content: {session}")  # Printing session content
+            print("Session data accessed successfully")
+        else:
+            print("Session is empty")
+    except Exception as e:
+        print(f"Failed to access session data: {e}")
+    # Insert into the database
+    cursor.execute("INSERT INTO inventory (uid,name, stock_level, price) VALUES (?, ?, ?, ?)",
+                   (session['user_id'],product_name, stock_level, price))
+    db.commit()
+
+    flash("Item added successfully!", "success")
+
+    return redirect(url_for("main.inventory"))
+@main.route("/delete_inventory/<int:id>", methods=["GET"])
+def delete_inventory(id):
+    # Delete the item from the database
+    cursor.execute("DELETE FROM inventory WHERE id = ?", (id,))
+    db.commit()
+
+    flash("Item deleted successfully!", "success")
+    return redirect(url_for("main.inventory"))
+
+
+@main.route("/edit_inventory/<int:id>", methods=["GET", "POST"])
+def edit_inventory(id):
+    db.row_factory = sqlite3.Row  # Enable row access by column name
+
+    try:
+        cursor = db.cursor()  # Create a new cursor for each request
+
+        if request.method == "POST":
+            product_name = request.form.get("product_name")
+            stock_level = request.form.get("stock_level")
+            price = request.form.get("price")
+
+            try:
+                # Update the selected item based on its ID and user_id
+                cursor.execute("UPDATE inventory SET name = ?, stock_level = ?, price = ? WHERE id = ? AND uid = ?",
+                               (product_name, stock_level, price, id, session['user_id']))
+                db.commit()
+                flash("Item updated successfully!", "success")
+                return redirect(url_for("main.inventory"))
+            except Exception as e:
+                print("Failed to update item:", e)
+                flash("Failed to update item!", "danger")
+
+        # Fetch the specific item by its ID and user_id
+        cursor.execute("SELECT * FROM inventory WHERE id = ? AND uid = ?", (id, session['user_id']))
+        item = cursor.fetchone()
+
+        if not item:
+            flash("Item not found!", "danger")
+            return redirect(url_for("main.inventory"))
+
+        print("Item fetched:", dict(item))
+
+    except Exception as e:
+        print("Database query failed:", e)
+        flash("Failed to load item!", "danger")
+        return redirect(url_for("main.inventory"))
+    finally:
+        cursor.close()  # Close the cursor to prevent memory leaks
+
+    return render_template("edit_inventory.html", item=item)
