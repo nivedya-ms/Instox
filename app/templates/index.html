@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demand Forecasting</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; }
+        .form-container { background: white; padding: 20px; border-radius: 8px; }
+        label { display: block; margin: 10px 0 5px; }
+        input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { background: #4CAF50; color: white; padding: 10px; border: none; }
+        #result { margin-top: 20px; padding: 10px; background: #e8f4e8; display: none; }
+    </style>
+</head>
+<body>
+    <h1>Demand Forecasting Tool</h1>
+    <div class="form-container">
+        <form id="forecastForm">
+            <label for="category">Item Category:</label>
+            <select id="category" name="category" required>
+    <option value="">Select Category</option>
+    <option value="Beachwear">Beachwear</option>
+    <option value="Casual Wear">Casual Wear</option>
+    <option value="Cultural Souvenirs">Cultural Souvenirs</option>
+    <option value="DIY Craft Kits">DIY Craft Kits</option>
+    <option value="Dance Costumes">Dance Costumes</option>
+    <option value="Eco-Friendly Textiles">Eco-Friendly Textiles</option>
+    <option value="Ethnic Footwear">Ethnic Footwear</option>
+    <option value="Fabrics">Fabrics</option>
+    <option value="Festive Wear">Festive Wear</option>
+    <option value="Formal Wear">Formal Wear</option>
+    <option value="Handicraft Textiles">Handicraft Textiles</option>
+    <option value="Home Textiles">Home Textiles</option>
+    <option value="Industrial Textiles">Industrial Textiles</option>
+    <option value="Kids’ Clothing">Kids’ Clothing</option>
+    <option value="Luxury Textiles">Luxury Textiles</option>
+    <option value="Maternity Wear">Maternity Wear</option>
+    <option value="Medical Textiles">Medical Textiles</option>
+    <option value="Nightwear &amp; Loungewear">Nightwear &amp; Loungewear</option>
+    <option value="Outdoor Gear Textiles">Outdoor Gear Textiles</option>
+    <option value="Party Wear">Party Wear</option>
+    <option value="Pet Clothing">Pet Clothing</option>
+    <option value="Plus-Size Clothing">Plus-Size Clothing</option>
+    <option value="Rain Accessories">Rain Accessories</option>
+    <option value="Religious Attire">Religious Attire</option>
+    <option value="School Uniforms">School Uniforms</option>
+    <option value="Seasonal Textiles">Seasonal Textiles</option>
+    <option value="Sleep Accessories">Sleep Accessories</option>
+    <option value="Specialty Fabrics">Specialty Fabrics</option>
+    <option value="Sports &amp; Activewear">Sports &amp; Activewear</option>
+    <option value="Traditional Wear">Traditional Wear</option>
+    <option value="Travel Textiles">Travel Textiles</option>
+    <option value="Vintage Textiles">Vintage Textiles</option>
+    <option value="Wedding Collection">Wedding Collection</option>
+    <option value="Western Wear">Western Wear</option>
+    <option value="Winter Wear">Winter Wear</option>
+    <option value="Workwear">Workwear</option>
+    <option value="Yoga &amp; Meditation Wear">Yoga &amp; Meditation Wear</option>
+</select>
+            <label for="sale_price">Sale Price ($):</label>
+            <input type="number" id="sale_price" name="sale_price" min="0" step="0.01" required>
+            <label for="stock_age_days">Stock Age (Days):</label>
+            <input type="number" id="stock_age_days" name="stock_age_days" min="0" required>
+            <label for="period">Forecast Period:</label>
+            <select id="period" name="period" required>
+                <option value="day">Next Day</option>
+                <option value="week">Next Week</option>
+                <option value="month">Next Month</option>
+                <option value="year">Next Year</option>
+            </select>
+            <!-- Add this after the period selector -->
+<div id="subPeriodContainer" style="display: none;">
+    <label for="sub_period">View By:</label>
+    <select id="sub_period" name="sub_period">
+        <!-- Options will be populated dynamically -->
+    </select>
+</div>
+            <button type="submit">Predict Demand</button>
+        </form>
+        <div id="result"></div>
+    </div>
+    <script>
+       document.getElementById('period').addEventListener('change', function() {
+    const period = this.value;
+    const subPeriodContainer = document.getElementById('subPeriodContainer');
+    const subPeriodSelect = document.getElementById('sub_period');
+
+    subPeriodSelect.innerHTML = '';
+
+    if (period === 'month') {
+        subPeriodContainer.style.display = 'block';
+        subPeriodSelect.innerHTML = `
+            <option value="day">Days</option>
+            <option value="week">Weeks</option>
+        `;
+    } else if (period === 'year') {
+        subPeriodContainer.style.display = 'block';
+        subPeriodSelect.innerHTML = `
+            <option value="day">Days</option>
+            <option value="week">Weeks</option>
+            <option value="month">Months</option>
+        `;
+    } else {
+        subPeriodContainer.style.display = 'none';
+    }
+});
+
+document.getElementById('forecastForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = {
+        // ... existing fields ...
+        period: document.getElementById('period').value,
+        sub_period: document.getElementById('sub_period').value || null
+    };
+
+    try {
+        const response = await fetch('/forecast', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+        renderChart(result.predictions, formData.period, formData.sub_period);
+    } catch (error) {
+        // ... error handling ...
+    }
+});
+
+function renderChart(data, period, subPeriod) {
+    const canvas = document.createElement('canvas');
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = '';
+    resultDiv.appendChild(canvas);
+
+    // Use Chart.js (include it in your head section)
+    new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: data.map(d => d.label),
+            datasets: [{
+                label: 'Predicted Demand',
+                data: data.map(d => d.value),
+                borderColor: '#4CAF50',
+                tension: 0.1
+            }]
+        },
+        options: {
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+    </script>
+</body>
+</html>
