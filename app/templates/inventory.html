@@ -20,9 +20,20 @@
                         <label for="productName" class="form-label">Product Name</label>
                         <input type="text" class="form-control" id="productName" name="product_name" required>
                     </div>
+                    <div class="col-md-4">
+    <label for="categoryName" class="form-label">Category Name</label>
+    <select class="form-control" id="categoryName" name="product_name" required>
+        <option value="" disabled selected>Select a category</option>
+        <option value="Traditional Wear">Traditional <Wear> </Wear></option>
+        <option value="clothing">Clothing</option>
+        <option value="furniture">Furniture</option>
+        <option value="books">Books</option>
+        <option value="other">Other</option>
+    </select>
+</div>
                     <div class="col-md-2">
                         <label for="stockLevel" class="form-label">Stock Level</label>
-                        <input type="number" class="form-control" id="stockLevel" name="stock_level" required>
+                        <input type="number" step="0.01" class="form-control" id="stockLevel" name="stock_level" required>
                     </div>
                     <div class="col-md-2">
                         <label for="price" class="form-label">Price</label>
