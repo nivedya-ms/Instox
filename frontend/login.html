@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login · Instox</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div class="container" style="max-width: 420px; margin-top: 60px;">
+    <h1 style="text-align: center; color: var(--primary);">Instox</h1>
+    <p style="text-align: center; color: var(--muted); margin-bottom: 24px;">Smart billing for small shops</p>
+
+    <div class="card">
+      <h2>Sign in</h2>
+      <div id="alert"></div>
+      <form id="login-form">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="email" class="form-control" required autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" name="password" class="form-control" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn btn-block">Login</button>
+      </form>
+      <p style="text-align: center; margin-top: 16px; color: var(--muted);">
+        New here? <a href="/register.html">Create an account</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      try {
+        await Instox.api('/auth/login', {
+          method: 'POST',
+          body: { email: fd.get('email'), password: fd.get('password') },
+        });
+        location.href = '/';
+      } catch (err) {
+        Instox.showAlert('alert', err.message, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

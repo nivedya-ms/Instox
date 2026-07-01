@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales · Instox</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <nav id="navbar" class="navbar"></nav>
+  <div class="container">
+    <h1>Sales</h1>
+
+    <div class="stat-grid">
+      <div class="stat-card"><div class="label">Today</div><div class="value" id="period-sales">—</div><div class="sub" id="period-count">0 sales</div></div>
+      <div class="stat-card profit"><div class="label">Profit</div><div class="value" id="period-profit">—</div></div>
+    </div>
+
+    <div class="card">
+      <label style="font-size:0.85rem;color:var(--muted)">Period</label>
+      <select id="period" class="form-control" style="margin-top:4px">
+        <option value="daily" selected>Today</option>
+        <option value="weekly">This week</option>
+        <option value="monthly">This month</option>
+        <option value="all">All time</option>
+      </select>
+    </div>
+
+    <div id="sales-list"></div>
+    <div id="empty" class="empty-state" style="display:none">
+      <div class="big">📋</div>
+      <p>No sales yet. Generate your first bill.</p>
+      <a href="/billing.html" class="btn">New bill</a>
+    </div>
+
+    <div id="sale-detail" style="display:none"></div>
+  </div>
+  <nav id="bottom-nav" class="bottom-nav"></nav>
+  <script src="/static/js/app.js"></script>
+  <script>
+    (async () => {
+      const user = await Instox.bootstrapPage({ active: 'sales' });
+      if (!user) return;
+
+      const periodEl = document.getElementById('period');
+      const listEl = document.getElementById('sales-list');
+      const emptyEl = document.getElementById('empty');
+      const detailEl = document.getElementById('sale-detail');
+
+      function periodToDates(p) {
+        const now = new Date();
+        const fmt = (d) => d.toISOString().slice(0, 10);
+        if (p === 'daily') return { start_date: fmt(now), end_date: fmt(now) };
+        if (p === 'weekly') {
+          const start = new Date(now);
+          start.setDate(now.getDate() - now.getDay());
+          return { start_date: fmt(start), end_date: fmt(now) };
+        }
+        if (p === 'monthly') {
+          const start = new Date(now.getFullYear(), now.getMonth(), 1);
+          return { start_date: fmt(start), end_date: fmt(now) };
+        }
+        return {};
+      }
+
+      async function load() {
+        const period = periodEl.value;
+        const summaryPeriod = period === 'all' ? 'monthly' : period;
+        try {
+          const sum = await Instox.api('/sales/summary?period=' + summaryPeriod);
+          document.getElementById('period-sales').textContent = Instox.fmtMoney(sum.data.total_sales);
+          document.getElementById('period-profit').textContent = Instox.fmtMoney(sum.data.total_profit);
+          document.getElementById('period-count').textContent = `${sum.data.sale_count} sale${sum.data.sale_count === 1 ? '' : 's'}`;
+        } catch (_) {}
+
+        const params = new URLSearchParams();
+        const range = periodToDates(period);
+        if (range.start_date) params.set('start_date', range.start_date);
+        if (range.end_date) params.set('end_date', range.end_date);
+        params.set('limit', '100');
+        try {
+          const { data } = await Instox.api('/sales?' + params.toString());
+          if (!data.length) {
+            listEl.innerHTML = '';
+            emptyEl.style.display = 'block';
+            return;
+          }
+          emptyEl.style.display = 'none';
+          listEl.innerHTML = data.map((s) => `
+            <div class="card sale-card" data-id="${s.id}">
+              <div class="split">
+                <div>
+                  <div class="amount">${Instox.fmtMoney(s.total_amount)}</div>
+                  <div class="when">${Instox.fmtDateTime(s.created_at)} · ${s.items.length} item${s.items.length === 1 ? '' : 's'}</div>
+                  ${s.customer_name ? `<div style="font-size:0.85rem">${Instox.escapeHtml(s.customer_name)}</div>` : ''}
+                </div>
+                <div class="profit">+${Instox.fmtMoney(s.total_profit)}</div>
+              </div>
+            </div>`).join('');
+          listEl.querySelectorAll('.sale-card').forEach((el) => {
+            el.addEventListener('click', () => showDetail(el.dataset.id));
+          });
+        } catch (e) {
+          Instox.toast(e.message, 'error');
+        }
+      }
+
+      async function showDetail(id) {
+        try {
+          const { data } = await Instox.api('/sales/' + id);
+          detailEl.style.display = 'block';
+          detailEl.innerHTML = `
+            <div class="card">
+              <div class="split"><h2 style="margin:0">Bill #${data.id}</h2><button id="close-detail" class="btn btn-sm btn-secondary">Close</button></div>
+              <div class="when">${Instox.fmtDateTime(data.created_at)}</div>
+              ${data.customer_name ? `<div>Customer: ${Instox.escapeHtml(data.customer_name)}</div>` : ''}
+              <div style="margin-top:12px">
+                ${data.items.map((it) => `<div class="bill-line"><span>${Instox.escapeHtml(it.product_name)} × ${it.quantity}</span><span>${Instox.fmtMoney(it.subtotal)}</span></div>`).join('')}
+              </div>
+              <div class="bill-total"><span>Total</span><span>${Instox.fmtMoney(data.total_amount)}</span></div>
+              <div class="bill-profit"><span>Profit</span><span>${Instox.fmtMoney(data.total_profit)}</span></div>
+            </div>`;
+          document.getElementById('close-detail').addEventListener('click', () => { detailEl.style.display = 'none'; });
+          detailEl.scrollIntoView({ behavior: 'smooth' });
+        } catch (e) {
+          Instox.toast(e.message, 'error');
+        }
+      }
+
+      periodEl.addEventListener('change', load);
+      load();
+    })();
+  </script>
+</body>
+</html>

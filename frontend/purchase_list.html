@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Purchase List · Instox</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <nav id="navbar" class="navbar"></nav>
+  <div class="container">
+    <h1>Purchase list</h1>
+    <p style="color:var(--muted);margin-top:-8px">Things to buy on your next wholesale trip.</p>
+
+    <div class="card">
+      <form id="add-form">
+        <div class="row">
+          <div class="col form-group" style="flex:2">
+            <label>Item</label>
+            <input type="text" id="item-name" class="form-control" required placeholder="e.g. Blue cotton 6x8" />
+          </div>
+          <div class="col form-group">
+            <label>Qty</label>
+            <input type="number" id="item-qty" class="form-control" min="1" value="1" required />
+          </div>
+        </div>
+        <button class="btn btn-block">+ Add to list</button>
+      </form>
+    </div>
+
+    <div id="list"></div>
+    <div id="empty" class="empty-state" style="display:none">
+      <div class="big">✅</div>
+      <p>Nothing to buy. Add items as you think of them.</p>
+    </div>
+  </div>
+  <nav id="bottom-nav" class="bottom-nav"></nav>
+  <script src="/static/js/app.js"></script>
+  <script>
+    (async () => {
+      const user = await Instox.bootstrapPage({ active: 'purchase' });
+      if (!user) return;
+
+      const listEl = document.getElementById('list');
+      const emptyEl = document.getElementById('empty');
+      const form = document.getElementById('add-form');
+
+      async function load() {
+        try {
+          const { data } = await Instox.api('/purchase-list');
+          if (!data.length) { listEl.innerHTML = ''; emptyEl.style.display = 'block'; return; }
+          emptyEl.style.display = 'none';
+          listEl.innerHTML = data.map((it) => `
+            <div class="checkbox-row ${it.is_purchased ? 'purchased' : ''}" data-id="${it.id}">
+              <input type="checkbox" ${it.is_purchased ? 'checked' : ''} />
+              <span class="name">${Instox.escapeHtml(it.item_name)}</span>
+              <span class="qty">x${it.quantity}</span>
+              <button class="del" title="Delete">×</button>
+            </div>
+          `).join('');
+          listEl.querySelectorAll('.checkbox-row').forEach((row) => {
+            const id = row.dataset.id;
+            row.querySelector('input[type="checkbox"]').addEventListener('change', async (e) => {
+              try {
+                await Instox.api('/purchase-list/' + id, { method: 'PUT', body: { is_purchased: e.target.checked } });
+                load();
+              } catch (err) { Instox.toast(err.message, 'error'); }
+            });
+            row.querySelector('.del').addEventListener('click', async () => {
+              if (!confirm('Remove this item?')) return;
+              try {
+                await Instox.api('/purchase-list/' + id, { method: 'DELETE' });
+                load();
+              } catch (err) { Instox.toast(err.message, 'error'); }
+            });
+          });
+        } catch (e) { Instox.toast(e.message, 'error'); }
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const item_name = document.getElementById('item-name').value.trim();
+        const quantity = parseInt(document.getElementById('item-qty').value || '1', 10);
+        if (!item_name) return;
+        try {
+          await Instox.api('/purchase-list', { method: 'POST', body: { item_name, quantity } });
+          form.reset();
+          document.getElementById('item-qty').value = 1;
+          load();
+        } catch (err) { Instox.toast(err.message, 'error'); }
+      });
+
+      load();
+    })();
+  </script>
+</body>
+</html>

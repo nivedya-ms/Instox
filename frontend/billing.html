@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Billing · Instox</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <nav id="navbar" class="navbar"></nav>
+  <div class="container">
+    <h1>New bill</h1>
+
+    <div class="card">
+      <div class="form-group">
+        <label>Customer name (optional)</label>
+        <input type="text" id="customer-name" class="form-control" placeholder="Walk-in customer" />
+      </div>
+
+      <div class="search-bar">
+        <input type="text" id="search" class="form-control" placeholder="Search & add product..." autocomplete="off" />
+      </div>
+      <div id="search-results"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0">Cart</h2>
+      <div id="cart"></div>
+      <div id="empty-cart" class="empty-state" style="padding:20px">
+        <div class="big">🛒</div>
+        <p>Search above to add items.</p>
+      </div>
+      <div id="cart-totals" style="display:none">
+        <div class="bill-total">
+          <span>Total</span>
+          <span id="total-amount">₹0</span>
+        </div>
+        <div class="bill-profit">
+          <span>Your profit (hidden from customer)</span>
+          <span id="total-profit">₹0</span>
+        </div>
+        <button id="generate-btn" class="btn btn-block btn-success" style="margin-top:12px">Generate bill</button>
+      </div>
+    </div>
+
+    <div id="bill-output" style="display:none"></div>
+  </div>
+  <nav id="bottom-nav" class="bottom-nav"></nav>
+  <script src="/static/js/app.js"></script>
+  <script src="/static/js/billing.js"></script>
+</body>
+</html>

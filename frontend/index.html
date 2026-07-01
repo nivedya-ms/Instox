@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard · Instox</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <nav id="navbar" class="navbar"></nav>
+  <div class="container">
+    <h1>Today</h1>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="label">Sales today</div><div class="value" id="today-sales">—</div><div class="sub" id="today-count">0 sales</div></div>
+      <div class="stat-card profit"><div class="label">Profit today</div><div class="value" id="today-profit">—</div><div class="sub">Hidden from customers</div></div>
+      <div class="stat-card"><div class="label">This month</div><div class="value" id="month-sales">—</div><div class="sub" id="month-profit-sub">— profit</div></div>
+      <div class="stat-card warn"><div class="label">Low stock</div><div class="value" id="low-stock-count">—</div><div class="sub" id="stock-total">— products</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Last 7 days</h2>
+      <div class="chart-container"><canvas id="sales-chart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="split"><h2 style="margin:0">Low stock items</h2><a href="/products.html" class="btn btn-sm btn-secondary">All products</a></div>
+      <div id="low-stock-list"></div>
+    </div>
+
+    <div class="card">
+      <h2>Quick actions</h2>
+      <div class="row">
+        <div class="col"><a href="/billing.html" class="btn btn-block">🛒 New bill</a></div>
+        <div class="col"><a href="/product_form.html" class="btn btn-block btn-secondary">+ Add product</a></div>
+      </div>
+    </div>
+  </div>
+  <nav id="bottom-nav" class="bottom-nav"></nav>
+  <script src="/static/js/app.js"></script>
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

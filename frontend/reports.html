@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports · Instox</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <nav id="navbar" class="navbar"></nav>
+  <div class="container">
+    <h1>Reports</h1>
+
+    <div class="card">
+      <h2 style="margin-top:0">Last 30 days</h2>
+      <div class="chart-container" style="height:240px"><canvas id="profit-chart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0">Stock value</h2>
+      <div id="stock-stats"></div>
+    </div>
+  </div>
+  <nav id="bottom-nav" class="bottom-nav"></nav>
+  <script src="/static/js/app.js"></script>
+  <script>
+    (async () => {
+      const user = await Instox.bootstrapPage({ active: 'home' });
+      if (!user) return;
+
+      try {
+        const profit = await Instox.api('/reports/profit');
+        const ctx = document.getElementById('profit-chart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: profit.data.daily.map((d) => d.date.slice(5)),
+            datasets: [
+              { label: 'Sales', data: profit.data.daily.map((d) => d.total_amount), borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.1)', fill: true, tension: 0.3 },
+              { label: 'Profit', data: profit.data.daily.map((d) => d.total_profit), borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.1)', fill: true, tension: 0.3 },
+            ],
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+        });
+
+        const stock = await Instox.api('/reports/stock');
+        document.getElementById('stock-stats').innerHTML = `
+          <div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr">
+            <div class="stat-card"><div class="label">Items</div><div class="value">${stock.data.total_items}</div></div>
+            <div class="stat-card"><div class="label">Units</div><div class="value">${stock.data.total_units}</div></div>
+            <div class="stat-card profit"><div class="label">Value</div><div class="value">${Instox.fmtMoney(stock.data.total_value)}</div></div>
+          </div>`;
+      } catch (e) {
+        Instox.toast(e.message, 'error');
+      }
+    })();
+  </script>
+</body>
+</html>
