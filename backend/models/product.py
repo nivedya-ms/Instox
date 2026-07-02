@@ -20,7 +20,14 @@ class Product(db.Model):
 
     category = db.relationship("Category", backref="products")
 
-    def to_dict(self, include_cost=True):
+    def stock_status(self, threshold=5):
+        if self.quantity <= 0:
+            return "out_of_stock"
+        if self.quantity <= threshold:
+            return "low"
+        return "normal"
+
+    def to_dict(self, include_cost=True, threshold=5):
         data = {
             "id": self.id,
             "name": self.name,
@@ -31,6 +38,7 @@ class Product(db.Model):
             "category_id": self.category_id,
             "category_name": self.category.name if self.category else None,
             "in_stock": self.quantity > 0,
+            "stock_status": self.stock_status(threshold),
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

@@ -19,14 +19,21 @@
       <div class="stat-card warn"><div class="label">Low stock</div><div class="value" id="low-stock-count">—</div><div class="sub" id="stock-total">— products</div></div>
     </div>
 
-    <div class="card">
-      <h2>Last 7 days</h2>
-      <div class="chart-container"><canvas id="sales-chart"></canvas></div>
+    <div id="low-stock-widget" class="alert-widget" style="display:none">
+      <div class="alert-widget-header">
+        <div>
+          <div class="alert-widget-title" id="alert-title">⚠️ Low stock alerts</div>
+          <div class="alert-widget-sub" id="alert-sub"></div>
+        </div>
+        <a href="/settings.html" class="btn btn-sm btn-secondary">Settings</a>
+      </div>
+      <div id="alert-list"></div>
+      <a href="/products.html" class="btn btn-block btn-secondary" style="margin-top:8px">View all products</a>
     </div>
 
     <div class="card">
-      <div class="split"><h2 style="margin:0">Low stock items</h2><a href="/products.html" class="btn btn-sm btn-secondary">All products</a></div>
-      <div id="low-stock-list"></div>
+      <h2>Last 7 days</h2>
+      <div class="chart-container"><canvas id="sales-chart"></canvas></div>
     </div>
 
     <div class="card">
@@ -34,6 +41,10 @@
       <div class="row">
         <div class="col"><a href="/billing.html" class="btn btn-block">🛒 New bill</a></div>
         <div class="col"><a href="/product_form.html" class="btn btn-block btn-secondary">+ Add product</a></div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <div class="col"><a href="/reports.html" class="btn btn-block btn-secondary">📊 Reports</a></div>
+        <div class="col"><a href="/settings.html" class="btn btn-block btn-secondary">⚙️ Settings</a></div>
       </div>
     </div>
   </div>

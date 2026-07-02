@@ -62,10 +62,11 @@ def list_products():
     limit = min(100, max(1, int(request.args.get("limit", 50))))
     total = q.count()
     items = q.order_by(Product.name).offset((page - 1) * limit).limit(limit).all()
+    threshold = int(current_user.low_stock_threshold)
     return jsonify(
         {
             "success": True,
-            "data": [p.to_dict() for p in items],
+            "data": [p.to_dict(threshold=threshold) for p in items],
             "pagination": {
                 "page": page,
                 "limit": limit,
@@ -90,20 +91,45 @@ def search_products():
         .limit(20)
         .all()
     )
-    return jsonify({"success": True, "data": [p.to_dict() for p in items]})
+    threshold = int(current_user.low_stock_threshold)
+    return jsonify({"success": True, "data": [p.to_dict(threshold=threshold) for p in items]})
 
 
 @bp.get("/low-stock")
 @login_required
 def low_stock():
-    threshold = int(request.args.get("threshold", 5))
+    threshold_arg = request.args.get("threshold")
+    if threshold_arg is None or threshold_arg == "":
+        threshold = int(current_user.low_stock_threshold)
+    else:
+        try:
+            threshold = int(threshold_arg)
+            if threshold < 0:
+                raise ValueError
+        except ValueError:
+            return jsonify({"success": False, "error": "threshold must be a non-negative integer"}), 400
     items = (
         Product.query.filter_by(user_id=current_user.id)
         .filter(Product.quantity <= threshold)
-        .order_by(Product.quantity)
+        .order_by(Product.quantity, Product.name)
         .all()
     )
-    return jsonify({"success": True, "data": [p.to_dict() for p in items]})
+    out_of_stock = [p.to_dict(threshold=threshold) for p in items if p.quantity <= 0]
+    low = [p.to_dict(threshold=threshold) for p in items if p.quantity > 0]
+    return jsonify(
+        {
+            "success": True,
+            "data": {
+                "threshold": threshold,
+                "out_of_stock_count": len(out_of_stock),
+                "low_count": len(low),
+                "total_count": len(items),
+                "out_of_stock": out_of_stock,
+                "low": low,
+                "items": out_of_stock + low,
+            },
+        }
+    )
 
 
 @bp.get("/<int:product_id>")
@@ -112,7 +138,9 @@ def get_product(product_id):
     p = Product.query.filter_by(id=product_id, user_id=current_user.id).first()
     if p is None:
         return jsonify({"success": False, "error": "Product not found"}), 404
-    return jsonify({"success": True, "data": p.to_dict()})
+    return jsonify(
+        {"success": True, "data": p.to_dict(threshold=int(current_user.low_stock_threshold))}
+    )
 
 
 @bp.post("")
@@ -149,7 +177,12 @@ def create_product():
     )
     db.session.add(product)
     db.session.commit()
-    return jsonify({"success": True, "data": product.to_dict()}), 201
+    return (
+        jsonify(
+            {"success": True, "data": product.to_dict(threshold=int(current_user.low_stock_threshold))}
+        ),
+        201,
+    )
 
 
 @bp.put("/<int:product_id>")
@@ -189,7 +222,9 @@ def update_product(product_id):
         return jsonify({"success": False, "error": str(e)}), 400
 
     db.session.commit()
-    return jsonify({"success": True, "data": product.to_dict()})
+    return jsonify(
+        {"success": True, "data": product.to_dict(threshold=int(current_user.low_stock_threshold))}
+    )
 
 
 @bp.delete("/<int:product_id>")

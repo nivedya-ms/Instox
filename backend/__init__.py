@@ -41,6 +41,7 @@ def create_app(config_class=Config):
     from .routes.purchase_list import bp as purchase_bp
     from .routes.categories import bp as categories_bp
     from .routes.dashboard import bp as dashboard_bp
+    from .routes.settings import bp as settings_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(products_bp, url_prefix="/api/products")
@@ -48,6 +49,7 @@ def create_app(config_class=Config):
     app.register_blueprint(purchase_bp, url_prefix="/api/purchase-list")
     app.register_blueprint(categories_bp, url_prefix="/api/categories")
     app.register_blueprint(dashboard_bp, url_prefix="/api")
+    app.register_blueprint(settings_bp, url_prefix="/api/settings")
 
     @app.errorhandler(404)
     def not_found(e):
@@ -69,5 +71,22 @@ def create_app(config_class=Config):
 
     with app.app_context():
         db.create_all()
+        _apply_lightweight_migrations()
 
     return app
+
+
+def _apply_lightweight_migrations():
+    """Add columns missing from existing tables. Idempotent."""
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(db.engine)
+    if "users" in inspector.get_table_names():
+        user_cols = {c["name"] for c in inspector.get_columns("users")}
+        if "low_stock_threshold" not in user_cols:
+            with db.engine.begin() as conn:
+                conn.execute(
+                    text(
+                        "ALTER TABLE users ADD COLUMN low_stock_threshold INTEGER NOT NULL DEFAULT 5"
+                    )
+                )

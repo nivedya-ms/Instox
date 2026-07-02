@@ -81,5 +81,16 @@ def update_me():
         if pct < 0 or pct > 1000:
             return jsonify({"success": False, "error": "profit_percentage out of range"}), 400
         current_user.profit_percentage = pct
+    if "low_stock_threshold" in data:
+        try:
+            v = int(data["low_stock_threshold"])
+            if v < 0:
+                raise ValueError
+        except (TypeError, ValueError):
+            return (
+                jsonify({"success": False, "error": "low_stock_threshold must be a non-negative integer"}),
+                400,
+            )
+        current_user.low_stock_threshold = v
     db.session.commit()
     return jsonify({"success": True, "data": current_user.to_dict()})

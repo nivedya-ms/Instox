@@ -17,7 +17,14 @@ def dashboard():
     now = datetime.utcnow()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    low_threshold = int(request.args.get("low_stock_threshold", 5))
+    override = request.args.get("low_stock_threshold")
+    if override not in (None, ""):
+        try:
+            low_threshold = max(0, int(override))
+        except ValueError:
+            low_threshold = int(current_user.low_stock_threshold)
+    else:
+        low_threshold = int(current_user.low_stock_threshold)
 
     today_total, today_profit, today_count = (
         db.session.query(
@@ -56,10 +63,12 @@ def dashboard():
     low_stock = (
         Product.query.filter_by(user_id=current_user.id)
         .filter(Product.quantity <= low_threshold)
-        .order_by(Product.quantity)
-        .limit(20)
+        .order_by(Product.quantity, Product.name)
+        .limit(50)
         .all()
     )
+    out_of_stock_items = [p for p in low_stock if p.quantity <= 0]
+    low_items = [p for p in low_stock if p.quantity > 0]
 
     last_7_days = []
     for i in range(6, -1, -1):
@@ -103,8 +112,13 @@ def dashboard():
                     "total_products": int(total_products),
                     "total_units": int(total_units),
                     "stock_value": float(stock_value),
+                    "threshold": low_threshold,
                     "low_stock_count": len(low_stock),
-                    "low_stock_items": [p.to_dict() for p in low_stock],
+                    "out_of_stock_count": len(out_of_stock_items),
+                    "low_only_count": len(low_items),
+                    "low_stock_items": [p.to_dict(threshold=low_threshold) for p in low_stock],
+                    "out_of_stock": [p.to_dict(threshold=low_threshold) for p in out_of_stock_items],
+                    "low": [p.to_dict(threshold=low_threshold) for p in low_items],
                 },
                 "last_7_days": last_7_days,
             },

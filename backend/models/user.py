@@ -15,6 +15,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     shop_name = db.Column(db.String(100))
     profit_percentage = db.Column(db.Numeric(5, 2), default=30.00, nullable=False)
+    low_stock_threshold = db.Column(db.Integer, default=5, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def set_password(self, password):
@@ -30,5 +31,6 @@ class User(UserMixin, db.Model):
             "email": self.email,
             "shop_name": self.shop_name,
             "profit_percentage": float(self.profit_percentage),
+            "low_stock_threshold": int(self.low_stock_threshold),
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }

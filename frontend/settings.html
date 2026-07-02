@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings · Instox</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <nav id="navbar" class="navbar"></nav>
+  <div class="container" style="max-width: 560px;">
+    <h1>Settings</h1>
+
+    <div class="card">
+      <h2 style="margin-top:0">Low-stock alerts</h2>
+      <p style="color:var(--muted);margin-top:-4px;font-size:0.9rem">
+        Items with stock at or below this number show as a warning on the dashboard.
+        Items with 0 stock always show as out of stock.
+      </p>
+      <div id="threshold-alert"></div>
+      <form id="threshold-form">
+        <div class="form-group">
+          <label>Alert when stock ≤</label>
+          <input type="number" name="low_stock_threshold" class="form-control" min="0" step="1" required />
+        </div>
+        <button class="btn btn-block" type="submit">Save threshold</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0">Shop &amp; pricing</h2>
+      <div id="profile-alert"></div>
+      <form id="profile-form">
+        <div class="form-group">
+          <label>Shop name</label>
+          <input type="text" name="shop_name" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>Default profit % (markup on cost)</label>
+          <input type="number" name="profit_percentage" class="form-control" min="0" max="1000" step="0.01" required />
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:4px">
+            Used to auto-calculate retail price when you add products.
+          </div>
+        </div>
+        <button class="btn btn-block" type="submit">Save profile</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <a href="/" class="btn btn-block btn-secondary">Back to dashboard</a>
+    </div>
+  </div>
+  <nav id="bottom-nav" class="bottom-nav"></nav>
+  <script src="/static/js/app.js"></script>
+  <script>
+    (async () => {
+      const user = await Instox.bootstrapPage({ active: 'home' });
+      if (!user) return;
+
+      const thresholdForm = document.getElementById('threshold-form');
+      const profileForm = document.getElementById('profile-form');
+
+      async function load() {
+        const { data } = await Instox.api('/settings');
+        thresholdForm.low_stock_threshold.value = data.low_stock_threshold;
+        profileForm.shop_name.value = data.shop_name || '';
+        profileForm.profit_percentage.value = data.profit_percentage;
+      }
+      await load();
+
+      thresholdForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const v = parseInt(thresholdForm.low_stock_threshold.value, 10);
+        try {
+          await Instox.api('/settings/threshold', {
+            method: 'PUT',
+            body: { low_stock_threshold: v },
+          });
+          Instox.showAlert('threshold-alert', `Threshold saved (${v}). Dashboard will use this.`, 'success');
+          Instox.toast('Threshold saved', 'success');
+        } catch (err) {
+          Instox.showAlert('threshold-alert', err.message, 'error');
+        }
+      });
+
+      profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          await Instox.api('/settings', {
+            method: 'PUT',
+            body: {
+              shop_name: profileForm.shop_name.value.trim(),
+              profit_percentage: parseFloat(profileForm.profit_percentage.value),
+            },
+          });
+          Instox.showAlert('profile-alert', 'Profile saved.', 'success');
+          Instox.toast('Saved', 'success');
+        } catch (err) {
+          Instox.showAlert('profile-alert', err.message, 'error');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

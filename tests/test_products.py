@@ -59,8 +59,10 @@ def test_low_stock(auth_client):
     auth_client.post("/api/products", json={"name": "A", "cost_price": 1, "quantity": 2})
     auth_client.post("/api/products", json={"name": "B", "cost_price": 1, "quantity": 10})
     res = auth_client.get("/api/products/low-stock?threshold=5")
-    names = [p["name"] for p in res.get_json()["data"]]
+    data = res.get_json()["data"]
+    names = [p["name"] for p in data["items"]]
     assert names == ["A"]
+    assert data["threshold"] == 5
 
 
 def test_users_cannot_see_each_others_products(client):
