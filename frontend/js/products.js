@@ -35,7 +35,9 @@
   function renderItem(p) {
     return `
       <div class="product-item" data-id="${p.id}">
+        ${Instox.thumbHtml(p.photo_url, p.name)}
         <div style="flex:1; min-width:0">
+          <div class="unique-id">${Instox.escapeHtml(p.unique_id || '')}</div>
           <div class="name">${Instox.escapeHtml(p.name)}</div>
           <div class="meta">
             ${Instox.fmtMoney(p.retail_price)} retail · cost ${Instox.fmtMoney(p.cost_price)}

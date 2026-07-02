@@ -60,6 +60,20 @@
           <label>Description</label>
           <textarea name="description" class="form-control" rows="2"></textarea>
         </div>
+
+        <div class="form-group">
+          <label>Photo</label>
+          <div id="photo-block">
+            <img id="photo-preview" class="photo-preview" style="display:none" alt="Preview" />
+            <div class="photo-actions">
+              <label for="photo-input" class="btn btn-sm btn-secondary" style="cursor:pointer">📷 Take / choose photo</label>
+              <button type="button" id="remove-photo" class="btn btn-sm btn-danger" style="display:none">Remove</button>
+            </div>
+            <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" />
+            <div id="photo-status" style="font-size:0.75rem;color:var(--muted);margin-top:6px"></div>
+          </div>
+        </div>
+
         <button type="submit" class="btn btn-block" id="submit-btn">Save</button>
         <a href="/products.html" class="btn btn-block btn-secondary" style="margin-top:8px">Cancel</a>
       </form>
@@ -95,6 +109,64 @@
       }
       await loadCategories(null);
 
+      const photoInput = document.getElementById('photo-input');
+      const photoPreview = document.getElementById('photo-preview');
+      const removePhotoBtn = document.getElementById('remove-photo');
+      const photoStatus = document.getElementById('photo-status');
+      let selectedPhotoFile = null;
+      let existingPhotoUrl = null;
+
+      function showPreview(src) {
+        if (!src) {
+          photoPreview.style.display = 'none';
+          removePhotoBtn.style.display = 'none';
+          return;
+        }
+        photoPreview.src = src;
+        photoPreview.style.display = 'block';
+        removePhotoBtn.style.display = 'inline-block';
+      }
+
+      photoInput.addEventListener('change', () => {
+        const f = photoInput.files && photoInput.files[0];
+        if (!f) return;
+        if (f.size > 8 * 1024 * 1024) {
+          Instox.toast('Photo too large (max 8 MB)', 'error');
+          photoInput.value = '';
+          return;
+        }
+        selectedPhotoFile = f;
+        showPreview(URL.createObjectURL(f));
+        photoStatus.textContent = `Selected: ${f.name} · will upload after save`;
+      });
+
+      removePhotoBtn.addEventListener('click', async () => {
+        if (selectedPhotoFile) {
+          selectedPhotoFile = null;
+          photoInput.value = '';
+          if (existingPhotoUrl) {
+            showPreview(existingPhotoUrl);
+            photoStatus.textContent = 'Kept current photo.';
+          } else {
+            showPreview(null);
+            photoStatus.textContent = '';
+          }
+          return;
+        }
+        if (editingId && existingPhotoUrl) {
+          if (!confirm('Remove current photo?')) return;
+          try {
+            const { data } = await Instox.api('/products/' + editingId + '/photo', { method: 'DELETE' });
+            existingPhotoUrl = data.photo_url || null;
+            showPreview(null);
+            photoStatus.textContent = 'Photo removed.';
+            Instox.toast('Photo removed', 'success');
+          } catch (err) {
+            Instox.toast(err.message, 'error');
+          }
+        }
+      });
+
       if (editingId) {
         document.getElementById('page-title').textContent = 'Edit product';
         try {
@@ -107,6 +179,13 @@
           form.sku.value = data.sku || '';
           form.description.value = data.description || '';
           if (data.category_id) form.category_id.value = data.category_id;
+          if (data.photo_url) {
+            existingPhotoUrl = data.photo_url;
+            showPreview(data.photo_url);
+          }
+          if (data.unique_id) {
+            document.getElementById('page-title').innerHTML = `Edit product <span style="font-family:monospace;font-size:0.7em;color:var(--muted)">${Instox.escapeHtml(data.unique_id)}</span>`;
+          }
         } catch (e) {
           Instox.showAlert('alert', e.message, 'error');
         }
@@ -144,6 +223,8 @@
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const submitBtn = document.getElementById('submit-btn');
+        submitBtn.disabled = true;
         const setSize = parseInt(form.set_size.value || '1', 10) || 1;
         const rawCost = parseFloat(form.cost_price.value);
         const body = {
@@ -157,15 +238,30 @@
         if (form.retail_price.value) body.retail_price = parseFloat(form.retail_price.value);
 
         try {
+          let saved;
           if (editingId) {
-            await Instox.api('/products/' + editingId, { method: 'PUT', body });
-            Instox.toast('Saved', 'success');
+            const res = await Instox.api('/products/' + editingId, { method: 'PUT', body });
+            saved = res.data;
           } else {
-            await Instox.api('/products', { method: 'POST', body });
-            Instox.toast('Product added', 'success');
+            const res = await Instox.api('/products', { method: 'POST', body });
+            saved = res.data;
           }
+
+          if (selectedPhotoFile && saved && saved.id) {
+            photoStatus.textContent = 'Uploading photo…';
+            try {
+              await Instox.uploadPhoto(saved.id, selectedPhotoFile);
+            } catch (err) {
+              Instox.toast('Saved, but photo upload failed: ' + err.message, 'error');
+              submitBtn.disabled = false;
+              return;
+            }
+          }
+
+          Instox.toast(editingId ? 'Saved' : `Added ${saved.unique_id || 'product'}`, 'success');
           location.href = '/products.html';
         } catch (err) {
+          submitBtn.disabled = false;
           Instox.showAlert('alert', err.message, 'error');
         }
       });

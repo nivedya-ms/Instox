@@ -15,8 +15,14 @@ class Product(db.Model):
     retail_price = db.Column(db.Numeric(10, 2), nullable=False)
     quantity = db.Column(db.Integer, default=0, nullable=False)
     sku = db.Column(db.String(50))
+    unique_id = db.Column(db.String(20), unique=True, index=True)
+    photo_url = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    @staticmethod
+    def format_unique_id(row_id):
+        return f"INSTOX-{row_id:05d}"
 
     category = db.relationship("Category", backref="products")
 
@@ -30,11 +36,13 @@ class Product(db.Model):
     def to_dict(self, include_cost=True, threshold=5):
         data = {
             "id": self.id,
+            "unique_id": self.unique_id or (self.format_unique_id(self.id) if self.id else None),
             "name": self.name,
             "description": self.description,
             "retail_price": float(self.retail_price),
             "quantity": self.quantity,
             "sku": self.sku,
+            "photo_url": self.photo_url,
             "category_id": self.category_id,
             "category_name": self.category.name if self.category else None,
             "in_stock": self.quantity > 0,

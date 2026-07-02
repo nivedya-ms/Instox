@@ -69,7 +69,9 @@
       if (!data.length) { resultsEl.innerHTML = '<p style="color:var(--muted);padding:8px">No matches.</p>'; return; }
       resultsEl.innerHTML = data.map((p) => `
         <div class="product-item" data-id="${p.id}">
+          ${Instox.thumbHtml(p.photo_url, p.name)}
           <div style="flex:1; min-width:0">
+            <div class="unique-id">${Instox.escapeHtml(p.unique_id || '')}</div>
             <div class="name">${Instox.escapeHtml(p.name)}</div>
             <div class="meta">${Instox.fmtMoney(p.retail_price)} · ${p.quantity === 0 ? '<span class=\"stock-out\">Out of stock</span>' : p.quantity + ' in stock'}</div>
           </div>

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from flask import Flask, jsonify, send_from_directory
@@ -69,6 +70,13 @@ def create_app(config_class=Config):
     def page(page):
         return send_from_directory(frontend_dir, f"{page}.html")
 
+    upload_dir = app.config["UPLOAD_FOLDER"]
+    os.makedirs(upload_dir, exist_ok=True)
+
+    @app.route("/uploads/<path:filename>")
+    def uploaded_file(filename):
+        return send_from_directory(upload_dir, filename)
+
     with app.app_context():
         db.create_all()
         _apply_lightweight_migrations()
@@ -81,7 +89,9 @@ def _apply_lightweight_migrations():
     from sqlalchemy import inspect, text
 
     inspector = inspect(db.engine)
-    if "users" in inspector.get_table_names():
+    tables = set(inspector.get_table_names())
+
+    if "users" in tables:
         user_cols = {c["name"] for c in inspector.get_columns("users")}
         if "low_stock_threshold" not in user_cols:
             with db.engine.begin() as conn:
@@ -90,3 +100,23 @@ def _apply_lightweight_migrations():
                         "ALTER TABLE users ADD COLUMN low_stock_threshold INTEGER NOT NULL DEFAULT 5"
                     )
                 )
+
+    if "products" in tables:
+        product_cols = {c["name"] for c in inspector.get_columns("products")}
+        with db.engine.begin() as conn:
+            if "unique_id" not in product_cols:
+                conn.execute(text("ALTER TABLE products ADD COLUMN unique_id VARCHAR(20)"))
+                conn.execute(
+                    text(
+                        "UPDATE products SET unique_id = 'INSTOX-' || substr('00000' || id, -5, 5) "
+                        "WHERE unique_id IS NULL"
+                    )
+                )
+                conn.execute(
+                    text(
+                        "CREATE UNIQUE INDEX IF NOT EXISTS ix_products_unique_id "
+                        "ON products(unique_id)"
+                    )
+                )
+            if "photo_url" not in product_cols:
+                conn.execute(text("ALTER TABLE products ADD COLUMN photo_url VARCHAR(255)"))

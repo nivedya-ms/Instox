@@ -1,8 +1,11 @@
+import os
+import secrets
 from decimal import Decimal, InvalidOperation
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 from flask_login import current_user, login_required
 from sqlalchemy import or_
+from werkzeug.utils import secure_filename
 
 from ..database.db import db
 from ..models.category import Category
@@ -10,6 +13,15 @@ from ..models.product import Product
 from ..utils.price_calculator import calculate_retail_price
 
 bp = Blueprint("products", __name__)
+
+
+def _photo_extension(filename):
+    if not filename or "." not in filename:
+        return None
+    ext = filename.rsplit(".", 1)[1].lower()
+    if ext not in current_app.config["ALLOWED_PHOTO_EXTENSIONS"]:
+        return None
+    return ext
 
 
 def _parse_decimal(value, field):
@@ -54,7 +66,13 @@ def list_products():
     search = (request.args.get("search") or "").strip()
     if search:
         like = f"%{search}%"
-        q = q.filter(or_(Product.name.ilike(like), Product.sku.ilike(like)))
+        q = q.filter(
+            or_(
+                Product.name.ilike(like),
+                Product.sku.ilike(like),
+                Product.unique_id.ilike(like),
+            )
+        )
     cat = request.args.get("category")
     if cat:
         q = q.filter(Product.category_id == int(cat))
@@ -86,7 +104,13 @@ def search_products():
     like = f"%{q_str}%"
     items = (
         Product.query.filter_by(user_id=current_user.id)
-        .filter(or_(Product.name.ilike(like), Product.sku.ilike(like)))
+        .filter(
+            or_(
+                Product.name.ilike(like),
+                Product.sku.ilike(like),
+                Product.unique_id.ilike(like),
+            )
+        )
         .order_by(Product.name)
         .limit(20)
         .all()
@@ -176,6 +200,8 @@ def create_product():
         sku=(data.get("sku") or "").strip() or None,
     )
     db.session.add(product)
+    db.session.flush()
+    product.unique_id = Product.format_unique_id(product.id)
     db.session.commit()
     return (
         jsonify(
@@ -275,4 +301,68 @@ def calculate_price_endpoint():
                 "profit_percentage": float(pct),
             },
         }
+    )
+
+
+@bp.post("/<int:product_id>/photo")
+@login_required
+def upload_photo(product_id):
+    product = Product.query.filter_by(id=product_id, user_id=current_user.id).first()
+    if product is None:
+        return jsonify({"success": False, "error": "Product not found"}), 404
+
+    file = request.files.get("photo") or request.files.get("file")
+    if file is None or not file.filename:
+        return jsonify({"success": False, "error": "No file uploaded (field: photo)"}), 400
+
+    ext = _photo_extension(secure_filename(file.filename))
+    if ext is None:
+        allowed = ", ".join(sorted(current_app.config["ALLOWED_PHOTO_EXTENSIONS"]))
+        return (
+            jsonify({"success": False, "error": f"Unsupported file type. Allowed: {allowed}"}),
+            400,
+        )
+
+    upload_dir = current_app.config["UPLOAD_FOLDER"]
+    os.makedirs(upload_dir, exist_ok=True)
+
+    old_url = product.photo_url
+    new_name = f"product_{product.id}_{secrets.token_hex(6)}.{ext}"
+    save_path = os.path.join(upload_dir, new_name)
+    file.save(save_path)
+
+    product.photo_url = f"/uploads/{new_name}"
+    db.session.commit()
+
+    if old_url and old_url.startswith("/uploads/"):
+        old_path = os.path.join(upload_dir, os.path.basename(old_url))
+        try:
+            if os.path.isfile(old_path):
+                os.remove(old_path)
+        except OSError:
+            pass
+
+    return jsonify(
+        {"success": True, "data": product.to_dict(threshold=int(current_user.low_stock_threshold))}
+    )
+
+
+@bp.delete("/<int:product_id>/photo")
+@login_required
+def delete_photo(product_id):
+    product = Product.query.filter_by(id=product_id, user_id=current_user.id).first()
+    if product is None:
+        return jsonify({"success": False, "error": "Product not found"}), 404
+    if product.photo_url and product.photo_url.startswith("/uploads/"):
+        upload_dir = current_app.config["UPLOAD_FOLDER"]
+        old_path = os.path.join(upload_dir, os.path.basename(product.photo_url))
+        try:
+            if os.path.isfile(old_path):
+                os.remove(old_path)
+        except OSError:
+            pass
+    product.photo_url = None
+    db.session.commit()
+    return jsonify(
+        {"success": True, "data": product.to_dict(threshold=int(current_user.low_stock_threshold))}
     )

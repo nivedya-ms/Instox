@@ -136,6 +136,7 @@ a:hover { text-decoration: underline; }
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   padding: 12px;
   background: var(--card);
   border: 1px solid var(--border);
@@ -147,6 +148,40 @@ a:hover { text-decoration: underline; }
 .product-item .price { font-weight: 700; color: var(--success); }
 .product-item .stock-low { color: var(--warning); font-weight: 600; }
 .product-item .stock-out { color: var(--danger); font-weight: 600; }
+.product-item .unique-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+}
+
+.thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.thumb.thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 1.4rem;
+}
+
+.photo-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  background: #f1f5f9;
+  margin-bottom: 8px;
+}
+.photo-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .empty-state {
   text-align: center;

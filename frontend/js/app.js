@@ -144,6 +144,32 @@ async function bootstrapPage({ active } = {}) {
   return user;
 }
 
+function thumbHtml(url, alt) {
+  if (url) {
+    return `<img class="thumb" src="${escapeHtml(url)}" alt="${escapeHtml(alt || '')}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'thumb thumb-placeholder',textContent:'📦'}))" />`;
+  }
+  return `<div class="thumb thumb-placeholder">📦</div>`;
+}
+
+async function uploadPhoto(productId, file) {
+  const form = new FormData();
+  form.append('photo', file);
+  const res = await fetch(API_BASE + `/products/${productId}/photo`, {
+    method: 'POST',
+    body: form,
+    credentials: 'include',
+  });
+  let body = null;
+  try { body = await res.json(); } catch (_) {}
+  if (!res.ok || (body && body.success === false)) {
+    const msg = (body && (body.error || body.message)) || `HTTP ${res.status}`;
+    const err = new Error(msg);
+    err.status = res.status;
+    throw err;
+  }
+  return body;
+}
+
 window.Instox = {
   api,
   fmtMoney,
@@ -155,4 +181,6 @@ window.Instox = {
   debounce,
   requireAuth,
   bootstrapPage,
+  thumbHtml,
+  uploadPhoto,
 };
