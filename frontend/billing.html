@@ -21,6 +21,13 @@
       <div class="search-bar">
         <input type="text" id="search" class="form-control" placeholder="Search name or INSTOX-ID..." autocomplete="off" />
       </div>
+
+      <div class="row" style="margin-bottom:8px">
+        <label for="snap-input" class="btn btn-block" style="cursor:pointer">📷 Snap items on counter</label>
+        <input type="file" id="snap-input" accept="image/*" capture="environment" style="display:none" />
+      </div>
+
+      <div id="snap-review" style="display:none"></div>
       <div id="search-results"></div>
     </div>
 
@@ -32,6 +39,10 @@
         <p>Search above to add items.</p>
       </div>
       <div id="cart-totals" style="display:none">
+        <div class="bill-total" style="font-size:0.95rem;color:var(--muted);border-bottom:none;padding-bottom:4px">
+          <span>Items</span>
+          <span id="item-count">0</span>
+        </div>
         <div class="bill-total">
           <span>Total</span>
           <span id="total-amount">₹0</span>

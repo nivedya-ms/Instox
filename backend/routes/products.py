@@ -1,5 +1,6 @@
 import os
 import secrets
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
 from flask import Blueprint, current_app, jsonify, request
@@ -10,6 +11,7 @@ from werkzeug.utils import secure_filename
 from ..database.db import db
 from ..models.category import Category
 from ..models.product import Product
+from ..services import mobileclip
 from ..utils.price_calculator import calculate_retail_price
 
 bp = Blueprint("products", __name__)
@@ -78,8 +80,15 @@ def list_products():
         q = q.filter(Product.category_id == int(cat))
     page = max(1, int(request.args.get("page", 1)))
     limit = min(100, max(1, int(request.args.get("limit", 50))))
+    sort = (request.args.get("sort") or "name").lower()
     total = q.count()
-    items = q.order_by(Product.name).offset((page - 1) * limit).limit(limit).all()
+    if sort == "recent":
+        order_col = Product.created_at.desc()
+    elif sort == "updated":
+        order_col = Product.updated_at.desc()
+    else:
+        order_col = Product.name.asc()
+    items = q.order_by(order_col).offset((page - 1) * limit).limit(limit).all()
     threshold = int(current_user.low_stock_threshold)
     return jsonify(
         {
@@ -332,6 +341,24 @@ def upload_photo(product_id):
     file.save(save_path)
 
     product.photo_url = f"/uploads/{new_name}"
+
+    # Compute + cache the MobileCLIP embedding so identify queries are O(1)
+    # per candidate. Best-effort: if the model isn't ready, we leave the
+    # column NULL and the identify endpoint will backfill lazily.
+    try:
+        if mobileclip.is_ready():
+            with open(save_path, "rb") as f:
+                emb = mobileclip.embed(f.read())
+            product.photo_embedding = mobileclip.to_bytes(emb)
+            product.photo_embedded_at = datetime.utcnow()
+        else:
+            product.photo_embedding = None
+            product.photo_embedded_at = None
+    except Exception as e:
+        current_app.logger.warning("MobileCLIP embed failed for product %s: %s", product.id, e)
+        product.photo_embedding = None
+        product.photo_embedded_at = None
+
     db.session.commit()
 
     if old_url and old_url.startswith("/uploads/"):
@@ -362,6 +389,8 @@ def delete_photo(product_id):
         except OSError:
             pass
     product.photo_url = None
+    product.photo_embedding = None
+    product.photo_embedded_at = None
     db.session.commit()
     return jsonify(
         {"success": True, "data": product.to_dict(threshold=int(current_user.low_stock_threshold))}

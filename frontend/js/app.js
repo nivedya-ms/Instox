@@ -2,6 +2,32 @@
 
 const API_BASE = '/api';
 
+// PWA — register the service worker as soon as the script loads.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => { /* ignore SW errors in dev */ });
+  });
+}
+
+// Best-effort inject manifest + theme colour + icon links so we don't have to
+// touch every HTML file.
+(function injectPwaHead() {
+  const head = document.head;
+  if (!head) return;
+  if (!head.querySelector('link[rel="manifest"]')) {
+    const l = document.createElement('link'); l.rel = 'manifest'; l.href = '/manifest.json';
+    head.appendChild(l);
+  }
+  if (!head.querySelector('meta[name="theme-color"]')) {
+    const m = document.createElement('meta'); m.name = 'theme-color'; m.content = '#2563eb';
+    head.appendChild(m);
+  }
+  if (!head.querySelector('link[rel="apple-touch-icon"]')) {
+    const l = document.createElement('link'); l.rel = 'apple-touch-icon'; l.href = '/static/icons/icon-192.svg';
+    head.appendChild(l);
+  }
+})();
+
 async function api(path, options = {}) {
   const opts = {
     credentials: 'include',
@@ -125,8 +151,8 @@ function renderBottomNav(active) {
     { key: 'home', href: '/', label: 'Home', icon: '🏠' },
     { key: 'products', href: '/products.html', label: 'Products', icon: '📦' },
     { key: 'billing', href: '/billing.html', label: 'Bill', icon: '🛒' },
+    { key: 'chat', href: '/chat.html', label: 'Ask', icon: '💬' },
     { key: 'sales', href: '/sales.html', label: 'Sales', icon: '📋' },
-    { key: 'purchase', href: '/purchase_list.html', label: 'To Buy', icon: '✅' },
   ];
   nav.innerHTML = items
     .map(

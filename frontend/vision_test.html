@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vision benchmark · Instox</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <nav id="navbar" class="navbar"></nav>
+  <div class="container" style="max-width: 900px;">
+    <h1>📊 Vision matching benchmark</h1>
+    <p style="color:var(--muted);margin-top:-8px;font-size:0.9rem">
+      Upload a photo of an item (or a group of items) — we score it against every product photo in your catalog
+      using each available method and show timing + top matches side by side. This is a research tool to help
+      decide which method to hard-wire into billing.
+    </p>
+
+    <div id="catalog-info" class="card"></div>
+
+    <div class="card">
+      <div class="form-group">
+        <label>Query photo</label>
+        <div class="row">
+          <label for="query-input" class="btn btn-block" style="cursor:pointer">📷 Take / choose photo</label>
+          <input type="file" id="query-input" accept="image/*" capture="environment" style="display:none" />
+        </div>
+      </div>
+      <div id="query-preview-wrap" style="display:none">
+        <img id="query-preview" class="photo-preview" style="width:180px;height:180px" alt="Query" />
+        <div id="query-hash" style="font-family:ui-monospace,monospace;font-size:0.8rem;color:var(--muted);word-break:break-all;margin-top:4px"></div>
+        <div id="query-hash-timing" style="font-size:0.8rem;color:var(--muted)"></div>
+      </div>
+      <div id="server-error" style="display:none"></div>
+    </div>
+
+    <div id="results"></div>
+  </div>
+
+  <nav id="bottom-nav" class="bottom-nav"></nav>
+  <script src="/static/js/app.js"></script>
+  <script src="/static/js/phash.js"></script>
+  <script>
+    (async () => {
+      const user = await Instox.bootstrapPage({ active: 'home' });
+      if (!user) return;
+
+      const catalogInfoEl = document.getElementById('catalog-info');
+      const queryInput = document.getElementById('query-input');
+      const previewWrap = document.getElementById('query-preview-wrap');
+      const previewEl = document.getElementById('query-preview');
+      const hashEl = document.getElementById('query-hash');
+      const timingEl = document.getElementById('query-hash-timing');
+      const errorEl = document.getElementById('server-error');
+      const resultsEl = document.getElementById('results');
+
+      // --- Catalog info ---------------------------------------------
+      try {
+        const { data } = await Instox.api('/ai/vision-benchmark/info');
+        catalogInfoEl.innerHTML = `
+          <div class="split">
+            <div>
+              <div><b>${data.catalog.total_products}</b> products · <b>${data.catalog.with_photo}</b> with photos${data.catalog.missing_photo ? ` · <span style="color:var(--warning)">${data.catalog.missing_photo} missing a photo</span>` : ''}</div>
+              <div style="font-size:0.85rem;color:var(--muted);margin-top:4px">Only products with photos can be matched against.</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px">
+            ${data.methods.map((m) => `
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+                <div style="flex:1">
+                  <div><b>${Instox.escapeHtml(m.name)}</b> ${m.available ? '<span style="color:var(--success);font-size:0.8rem">● available</span>' : '<span style="color:var(--muted);font-size:0.8rem">○ not installed</span>'}</div>
+                  <div style="font-size:0.8rem;color:var(--muted)">${Instox.escapeHtml(m.description)}</div>
+                  ${!m.available && m.install_hint ? `<div style="font-family:ui-monospace,monospace;font-size:0.8rem;margin-top:2px">Install: <code>${Instox.escapeHtml(m.install_hint)}</code></div>` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>`;
+      } catch (e) {
+        catalogInfoEl.innerHTML = `<div class="alert error">${Instox.escapeHtml(e.message)}</div>`;
+      }
+
+      // --- Query flow -----------------------------------------------
+      queryInput.addEventListener('change', async () => {
+        const file = queryInput.files && queryInput.files[0];
+        if (!file) return;
+        errorEl.style.display = 'none';
+        resultsEl.innerHTML = '';
+
+        // Show preview
+        previewEl.src = URL.createObjectURL(file);
+        previewWrap.style.display = 'block';
+
+        // Browser hash first — instant, so the user can see the offline story.
+        hashEl.textContent = '…hashing in browser…';
+        timingEl.textContent = '';
+        const tBrowser0 = performance.now();
+        let browserHash = '';
+        try {
+          browserHash = await InstoxPhash.phash(file);
+        } catch (e) {
+          hashEl.textContent = 'browser hash failed: ' + e.message;
+        }
+        const tBrowser = performance.now() - tBrowser0;
+        hashEl.textContent = 'browser pHash: ' + browserHash;
+        timingEl.textContent = `browser hash: ${tBrowser.toFixed(1)} ms`;
+
+        // Now hit the server for the full benchmark.
+        resultsEl.innerHTML = `<div class="card"><div style="text-align:center;color:var(--muted);padding:20px">⏳ Server ranking against catalog...</div></div>`;
+        const form = new FormData();
+        form.append('photo', file);
+        let body;
+        try {
+          const res = await fetch('/api/ai/vision-benchmark', {
+            method: 'POST',
+            body: form,
+            credentials: 'include',
+          });
+          body = await res.json();
+          if (!res.ok || !body.success) throw new Error((body && body.error) || `HTTP ${res.status}`);
+        } catch (e) {
+          resultsEl.innerHTML = '';
+          errorEl.style.display = 'block';
+          errorEl.innerHTML = `<div class="alert error">${Instox.escapeHtml(e.message)}</div>`;
+          return;
+        }
+
+        renderResults(body.data, browserHash, tBrowser);
+      });
+
+      function renderResults(data, browserHash, browserMs) {
+        if (data.error) {
+          resultsEl.innerHTML = `<div class="card"><div class="alert warning">${Instox.escapeHtml(data.error)}</div></div>`;
+          return;
+        }
+
+        const html = [`
+          <div class="card">
+            <div style="font-size:0.9rem;color:var(--muted);margin-bottom:8px">
+              Compared against <b>${data.candidate_count}</b> products with photos.
+              ${data.skipped_no_photo ? `Skipped <b>${data.skipped_no_photo}</b> without a photo.` : ''}
+            </div>
+          </div>`];
+
+        data.methods.forEach((m) => {
+          const serverHash = m.query_hash;
+          const parity = (serverHash && browserHash && m.method === 'phash')
+            ? (serverHash === browserHash
+              ? '<span style="color:var(--success)">✔ matches browser hash exactly</span>'
+              : `<span style="color:var(--warning)">≠ browser hash (server=${serverHash} browser=${browserHash})</span>`)
+            : '';
+          const displayName = m.method === 'phash' ? 'Perceptual hash' : (m.method === 'mobileclip' ? 'MobileCLIP-S0' : m.method);
+          const timing = m.query_ms !== undefined
+            ? `query ${m.query_ms} ms · compare ${m.compare_ms} ms · total ${m.total_ms} ms${m.catalog_hash_build_ms !== undefined ? ' · catalog build ' + m.catalog_hash_build_ms + ' ms' : ''}${m.backfilled ? ' · backfilled ' + m.backfilled : ''}`
+            : '';
+          html.push(`
+            <div class="card">
+              <div class="split">
+                <h2 style="margin:0">${Instox.escapeHtml(displayName)}</h2>
+                ${timing ? `<span style="color:var(--muted);font-size:0.85rem">${timing}</span>` : ''}
+              </div>
+              ${m.method === 'phash' ? `<div style="font-size:0.8rem;color:var(--muted);margin-top:4px">${parity}</div>` : ''}
+              ${m.note ? `<div class="alert warning" style="margin-top:8px">${Instox.escapeHtml(m.note)}</div>` : ''}
+              ${m.matches && m.matches.length ? `
+                <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:0.9rem">
+                  <thead>
+                    <tr style="border-bottom:1px solid var(--border);text-align:left">
+                      <th style="padding:8px 4px">Rank</th>
+                      <th style="padding:8px 4px">Photo</th>
+                      <th style="padding:8px 4px">Product</th>
+                      <th style="padding:8px 4px;text-align:right">Similarity</th>
+                      <th style="padding:8px 4px;text-align:right">Hamming</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${m.matches.map((mt, i) => `
+                      <tr style="border-bottom:1px solid var(--border)">
+                        <td style="padding:8px 4px">${i + 1}</td>
+                        <td style="padding:8px 4px">${Instox.thumbHtml(mt.photo_url, mt.label)}</td>
+                        <td style="padding:8px 4px">
+                          <div style="font-family:ui-monospace,monospace;font-size:0.75rem;color:var(--muted)">${Instox.escapeHtml(mt.unique_id || '')}</div>
+                          <div>${Instox.escapeHtml(mt.label)}</div>
+                          ${mt.category_name ? `<div style="font-size:0.75rem;color:var(--muted)">${Instox.escapeHtml(mt.category_name)}</div>` : ''}
+                        </td>
+                        <td style="padding:8px 4px;text-align:right;font-weight:600">${(mt.similarity * 100).toFixed(1)}%</td>
+                        <td style="padding:8px 4px;text-align:right">${mt.hamming} / 64</td>
+                      </tr>`).join('')}
+                  </tbody>
+                </table>
+              ` : (!m.note ? '<div style="color:var(--muted);padding:8px">No matches.</div>' : '')}
+            </div>`);
+        });
+
+        html.push(`
+          <div class="card">
+            <div><b>Browser vs server</b></div>
+            <div style="font-size:0.85rem;color:var(--muted);margin-top:4px">
+              Browser hashed the query in <b>${browserMs.toFixed(1)} ms</b>. Server rebuilt catalog hashes + ranked in the timings above.
+              In production the browser would compute the query hash offline and send only the 16-char hash to the server; the server would only need to compare, not re-read catalog photos.
+            </div>
+          </div>`);
+
+        resultsEl.innerHTML = html.join('');
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ask Instox · AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <nav id="navbar" class="navbar"></nav>
+  <div class="container" style="max-width: 720px;">
+    <h1>💬 Ask about your shop</h1>
+    <p style="color:var(--muted);margin-top:-8px;font-size:0.9rem">
+      Ask questions in plain English. I'll look at your sales, stock, and profit and answer.
+    </p>
+
+    <div id="stub-banner" class="stub-banner" style="display:none">
+      Running in <b>stub mode</b> — a few example questions are answered offline. Add
+      <code>DEEPSEEK_API_KEY</code> to <code>.env</code> and set <code>LLM_PROVIDER=deepseek</code>
+      for full AI answers.
+    </div>
+
+    <div id="suggestions" class="card">
+      <div style="font-size:0.85rem;color:var(--muted);margin-bottom:8px">Try one of these:</div>
+      <div id="suggestion-list"></div>
+    </div>
+
+    <div id="thread" class="chat-thread"></div>
+
+    <form id="chat-form" class="chat-input-bar">
+      <input type="text" id="chat-input" class="form-control" placeholder="Ask me anything about your shop..." autocomplete="off" required />
+      <button type="submit" class="btn" id="send-btn">Ask</button>
+    </form>
+  </div>
+
+  <nav id="bottom-nav" class="bottom-nav"></nav>
+  <script src="/static/js/app.js"></script>
+  <script>
+    (async () => {
+      const user = await Instox.bootstrapPage({ active: 'chat' });
+      if (!user) return;
+
+      const threadEl = document.getElementById('thread');
+      const inputEl = document.getElementById('chat-input');
+      const sendBtn = document.getElementById('send-btn');
+      const form = document.getElementById('chat-form');
+      const stubBanner = document.getElementById('stub-banner');
+      const suggestionsCard = document.getElementById('suggestions');
+      const suggestionList = document.getElementById('suggestion-list');
+
+      let inFlight = false;
+
+      try {
+        const { data } = await Instox.api('/ai/status');
+        if (data.stub_mode) stubBanner.style.display = 'block';
+        suggestionList.innerHTML = (data.example_questions || [])
+          .map((q) => `<button type="button" class="chat-suggestion" data-q="${Instox.escapeHtml(q)}">${Instox.escapeHtml(q)}</button>`)
+          .join('');
+        suggestionList.querySelectorAll('.chat-suggestion').forEach((el) => {
+          el.addEventListener('click', () => {
+            inputEl.value = el.dataset.q;
+            form.dispatchEvent(new Event('submit'));
+          });
+        });
+      } catch (e) {
+        // silent — status is nice-to-have
+      }
+
+      function addMsg(role, text, opts = {}) {
+        const el = document.createElement('div');
+        el.className = 'chat-msg ' + role + (opts.thinking ? ' thinking' : '') + (opts.stub ? ' stub' : '');
+        el.textContent = text;
+        threadEl.appendChild(el);
+        el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        return el;
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const question = inputEl.value.trim();
+        if (!question || inFlight) return;
+        inFlight = true;
+        sendBtn.disabled = true;
+        suggestionsCard.style.display = 'none';
+
+        addMsg('user', question);
+        inputEl.value = '';
+        const thinkingEl = addMsg('ai', 'Thinking…', { thinking: true });
+
+        try {
+          const { data } = await Instox.api('/ai/chat', {
+            method: 'POST',
+            body: { question },
+          });
+          thinkingEl.remove();
+          addMsg('ai', data.answer || '(no answer)', { stub: data.used_stub });
+        } catch (err) {
+          thinkingEl.remove();
+          addMsg('ai', 'Sorry — ' + err.message);
+        } finally {
+          inFlight = false;
+          sendBtn.disabled = false;
+          inputEl.focus();
+        }
+      });
+
+      inputEl.focus();
+    })();
+  </script>
+</body>
+</html>

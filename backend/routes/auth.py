@@ -5,6 +5,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy.exc import IntegrityError
 
 from ..database.db import db
+from ..models.category import DEFAULT_CATEGORIES, Category
 from ..models.user import User
 
 bp = Blueprint("auth", __name__)
@@ -31,6 +32,11 @@ def register():
     user.set_password(password)
     db.session.add(user)
     try:
+        db.session.flush()
+        for spec in DEFAULT_CATEGORIES:
+            db.session.add(
+                Category(user_id=user.id, name=spec["name"], unit=spec["unit"], icon=spec["icon"])
+            )
         db.session.commit()
     except IntegrityError:
         db.session.rollback()

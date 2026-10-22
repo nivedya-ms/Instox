@@ -45,7 +45,7 @@
           </div>
         </div>
         <div style="text-align:right">
-          <div class="${stockClass(p.quantity)}">${p.quantity === 0 ? 'Out of stock' : p.quantity + ' in stock'}</div>
+          <div class="${stockClass(p.quantity)}">${p.quantity === 0 ? 'Out of stock' : p.quantity + ' ' + Instox.escapeHtml(p.unit || 'in stock')}</div>
           <div style="margin-top:6px; display:flex; gap:6px; justify-content:flex-end">
             <a href="/product_form.html?id=${p.id}" class="btn btn-sm btn-secondary">Edit</a>
             <button class="btn btn-sm btn-danger" data-act="delete" data-id="${p.id}">Delete</button>

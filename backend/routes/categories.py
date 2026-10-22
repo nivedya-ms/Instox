@@ -22,10 +22,14 @@ def create_category():
     name = (data.get("name") or "").strip()
     if not name:
         return jsonify({"success": False, "error": "Name is required"}), 400
+    unit = (data.get("unit") or "pieces").strip() or "pieces"
+    icon = (data.get("icon") or "📦").strip() or "📦"
     cat = Category(
         user_id=current_user.id,
         name=name,
         description=(data.get("description") or "").strip() or None,
+        unit=unit,
+        icon=icon,
     )
     db.session.add(cat)
     db.session.commit()
@@ -46,6 +50,10 @@ def update_category(cat_id):
         cat.name = name
     if "description" in data:
         cat.description = (data.get("description") or "").strip() or None
+    if "unit" in data:
+        cat.unit = (data.get("unit") or "pieces").strip() or "pieces"
+    if "icon" in data:
+        cat.icon = (data.get("icon") or "📦").strip() or "📦"
     db.session.commit()
     return jsonify({"success": True, "data": cat.to_dict()})
 

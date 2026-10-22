@@ -43,6 +43,7 @@ def create_app(config_class=Config):
     from .routes.categories import bp as categories_bp
     from .routes.dashboard import bp as dashboard_bp
     from .routes.settings import bp as settings_bp
+    from .routes.ai import bp as ai_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(products_bp, url_prefix="/api/products")
@@ -51,6 +52,7 @@ def create_app(config_class=Config):
     app.register_blueprint(categories_bp, url_prefix="/api/categories")
     app.register_blueprint(dashboard_bp, url_prefix="/api")
     app.register_blueprint(settings_bp, url_prefix="/api/settings")
+    app.register_blueprint(ai_bp, url_prefix="/api/ai")
 
     @app.errorhandler(404)
     def not_found(e):
@@ -70,6 +72,14 @@ def create_app(config_class=Config):
     def page(page):
         return send_from_directory(frontend_dir, f"{page}.html")
 
+    @app.route("/sw.js")
+    def service_worker():
+        return send_from_directory(frontend_dir, "sw.js")
+
+    @app.route("/manifest.json")
+    def pwa_manifest():
+        return send_from_directory(frontend_dir, "manifest.json")
+
     upload_dir = app.config["UPLOAD_FOLDER"]
     os.makedirs(upload_dir, exist_ok=True)
 
@@ -80,6 +90,12 @@ def create_app(config_class=Config):
     with app.app_context():
         db.create_all()
         _apply_lightweight_migrations()
+
+    # Prefetch MobileCLIP in the background so first request is fast. In
+    # testing (or if the user disables), skip.
+    if not app.config.get("TESTING") and not app.config.get("DISABLE_MOBILECLIP_WARMUP"):
+        from .services import mobileclip
+        mobileclip.warmup_async()
 
     return app
 
@@ -120,3 +136,19 @@ def _apply_lightweight_migrations():
                 )
             if "photo_url" not in product_cols:
                 conn.execute(text("ALTER TABLE products ADD COLUMN photo_url VARCHAR(255)"))
+            if "photo_embedding" not in product_cols:
+                conn.execute(text("ALTER TABLE products ADD COLUMN photo_embedding BLOB"))
+            if "photo_embedded_at" not in product_cols:
+                conn.execute(text("ALTER TABLE products ADD COLUMN photo_embedded_at TIMESTAMP"))
+
+    if "categories" in tables:
+        cat_cols = {c["name"] for c in inspector.get_columns("categories")}
+        with db.engine.begin() as conn:
+            if "unit" not in cat_cols:
+                conn.execute(
+                    text("ALTER TABLE categories ADD COLUMN unit VARCHAR(20) NOT NULL DEFAULT 'pieces'")
+                )
+            if "icon" not in cat_cols:
+                conn.execute(
+                    text("ALTER TABLE categories ADD COLUMN icon VARCHAR(8) NOT NULL DEFAULT '📦'")
+                )

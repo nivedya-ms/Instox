@@ -17,6 +17,11 @@ class Product(db.Model):
     sku = db.Column(db.String(50))
     unique_id = db.Column(db.String(20), unique=True, index=True)
     photo_url = db.Column(db.String(255))
+    # Cached MobileCLIP embedding of the photo. 512 float32 = 2048 bytes.
+    # Recomputed whenever photo_url changes. NULL when no photo or before
+    # MobileCLIP is available.
+    photo_embedding = db.Column(db.LargeBinary)
+    photo_embedded_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -45,6 +50,7 @@ class Product(db.Model):
             "photo_url": self.photo_url,
             "category_id": self.category_id,
             "category_name": self.category.name if self.category else None,
+            "unit": (self.category.unit if self.category else None) or "pieces",
             "in_stock": self.quantity > 0,
             "stock_status": self.stock_status(threshold),
             "created_at": self.created_at.isoformat() if self.created_at else None,
